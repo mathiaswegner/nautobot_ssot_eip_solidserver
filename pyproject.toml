@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools ~= 65.0.0", "cython ~= 0.29.0" ]
+    #  "pynautobot ~= 1.4.0"
+    # "diffsync ~= 1.7.0", "validators ~= 0.20.0"
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nautobot-plugin-ssot-eip-solidserver"
+version = "0.0.4"
+authors = [
+  { name="Mathias Wegner", email="mwegner@isc.upenn.edu" },
+]
+description = "first pass at SSoT plugin for EIP Solidserver"
+readme = ""
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+# "Homepage" = ""
+# "Bug Tracker" = ""
