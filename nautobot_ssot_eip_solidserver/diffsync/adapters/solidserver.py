@@ -1,6 +1,5 @@
 from diffsync import DiffSync
-from diffsync.enum import DiffSyncFlags
-from diffsync.exceptions import ObjectAlreadyExists, ObjectNotFound
+from diffsync.exceptions import ObjectAlreadyExists
 from django.conf import settings
 from nautobot.extras.plugins.exceptions import PluginImproperlyConfigured
 from nautobot_ssot_eip_solidserver.diffsync.models.solidserver import \

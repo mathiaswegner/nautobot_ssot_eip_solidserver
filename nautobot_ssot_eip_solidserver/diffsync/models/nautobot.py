@@ -1,5 +1,4 @@
 from nautobot.extras.models import Status as OrmStatus
-import nautobot.extras.models.statuses
 from nautobot.ipam.models import IPAddress as OrmIPAddress
 from nautobot.ipam.models import Prefix as OrmPrefix
 from nautobot_ssot_eip_solidserver.diffsync.models.base import IPAddress, \
@@ -171,4 +170,5 @@ class NautobotIPPrefix(IPPrefix):
         super().delete()
         prefix = OrmPrefix.objects.get(**self.get_identifiers())
         prefix.delete()
+        super().delete()
         return self
