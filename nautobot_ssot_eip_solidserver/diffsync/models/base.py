@@ -16,7 +16,7 @@ class IPAddress(DiffSyncModel):
     address: str
     # status: Optional[str]
     nnn_id: Optional[int]
-   # uuid: Optional[UUID]
+    # uuid: Optional[UUID]
     subnet_size: Optional[int]
 
 
@@ -32,7 +32,7 @@ class IPPrefix(DiffSyncModel):
     prefix: str
     # status: Optional[str]
     nnn_id: Optional[int]
-   # uuid: Optional[UUID]
+    # uuid: Optional[UUID]
     subnet_size: Optional[int]
     # parent_network: Optional[str]
     # ipaddresses: List["IPAddress"] = list()

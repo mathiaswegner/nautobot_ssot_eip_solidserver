@@ -1,3 +1,4 @@
+from django.core.exceptions import ObjectDoesNotExist
 from nautobot.extras.models import Status as OrmStatus
 from nautobot.ipam.models import IPAddress as OrmIPAddress
 from nautobot.ipam.models import Prefix as OrmPrefix
@@ -26,7 +27,7 @@ class NautobotIPAddress(IPAddress):
             status=status
         )
         new_address._custom_field_data = {
-            "solidserver_addr_id": attrs.get("nnn_id", "")}
+            "solidserver_addr_id": str(attrs.get("nnn_id", -1))}
         new_address.validated_save()
         return super().create(ids=ids, diffsync=diffsync, attrs=attrs)
 
@@ -49,7 +50,8 @@ class NautobotIPAddress(IPAddress):
         if attrs.get("dns_name"):
             _address.dns_name = attrs["dns_name"]
         if attrs.get("subnet_size"):
-            if '/' in attrs.get("subnet_size"):
+            if isinstance(attrs.get("subnet_size"), str) and \
+                    '/' in attrs.get("subnet_size"):
                 _address.prefix_length = str(
                     attrs.get("subnet_size")).split('/')[1]
             else:
@@ -57,8 +59,10 @@ class NautobotIPAddress(IPAddress):
         if attrs.get("description"):
             _address.description = attrs["description"]
         if attrs.get("nnn_id"):
+            self.diffsync.job.log_debug(
+                f"Setting nnn_id to {attrs.get('nnn_id')} as update in place")
             _address._custom_field_data["solidserver_addr_id"] = \
-                attrs.get("nnn_id")
+                str(attrs.get("nnn_id", "-1"))
             # if attrs.get("status"):
             #     try:
             #         _address.status = OrmStatus.objects.get(
@@ -66,10 +70,16 @@ class NautobotIPAddress(IPAddress):
             #     except nautobot.extras.models.statuses.Status.DoesNotExist:
             #         _address.status = OrmStatus.objects.get(name="Unknown")
         elif attrs.get("dns_name") == "":
+            self.diffsync.job.log_debug(
+                "Setting nnn_id to -1 after dns_name == ''"
+            )
             try:
-                _address._custom_field_data["solidserver_addr_id"] = ""
+                _address._custom_field_data["solidserver_addr_id"] = "-1"
             except (AttributeError, KeyError):
-                _address._custom_field_data = {"solidserver_addr_id": ""}
+                self.diffsync.job.log_debug(
+                    "Setting nnn_id to -1 after exception dns_name = ''"
+                )
+                _address._custom_field_data = {"solidserver_addr_id": "-1"}
             _address.status = OrmStatus.objects.get(name="NO-IPAM-RECORD")
         else:
             # if attrs.get("status"):
@@ -90,9 +100,22 @@ class NautobotIPAddress(IPAddress):
         """Delete a nautobot IP address that matches this model"""
         self.diffsync.job.log_warning(
             f"Address {self.address} will be deleted.")
-        address = OrmIPAddress.objects.get(**self.get_identifiers())
-        address.delete()
-        super().delete()
+        try:
+            self.diffsync.job.log_debug(
+                f"Trying host={self.get_identifiers().get('address')}"
+            )
+            address = OrmIPAddress.objects.get(
+                host=self.get_identifiers().get('address'))
+            address.delete()
+            super().delete()
+            self.diffsync.job.log_debug('SUCCESS!')
+        except (OrmIPAddress.DoesNotExist, ObjectDoesNotExist):
+            self.diffsync.job.log_warning(
+                f"Failed to delete {self.address}, got DoesNotExist error!"
+            )
+            self.diffsync.job.log_debug(
+                f"host={self.get_identifiers().get('address')} FAILED"
+            )
         return self
 
 
@@ -113,7 +136,7 @@ class NautobotIPPrefix(IPPrefix):
             status=status
         )
         new_prefix._custom_field_data = {
-            "solidserver_addr_id": attrs.get("nnn_id", "")}
+            "solidserver_addr_id": str(attrs.get("nnn_id", "-1"))}
         new_prefix.validated_save()
         return super().create(ids=ids, diffsync=diffsync, attrs=attrs)
 
@@ -133,20 +156,20 @@ class NautobotIPPrefix(IPPrefix):
         if attrs.get("nnn_id"):
             try:
                 _prefix._custom_field_data["solidserver_addr_id"] = \
-                    attrs.get("nnn_id")
+                    str(attrs.get("nnn_id", "-1"))
             except (AttributeError, KeyError):
                 _prefix._custom_field_data = {
-                    "solidserver_addr_id": attrs.get("nnn_id", "")}
+                    "solidserver_addr_id": str(attrs.get("nnn_id", "-1"))}
             # try:
             #     _prefix.status = OrmStatus.objects.get(name=attrs["status"])
             # except nautobot.extras.models.statuses.Status.DoesNotExist:
             #     _prefix.status = OrmStatus.objects.get(name="Unknown")
         elif attrs.get("description") == "":
             try:
-                _prefix._custom_field_data["solidserver_addr_id"] = ""
+                _prefix._custom_field_data["solidserver_addr_id"] = "-1"
             except (AttributeError, KeyError):
                 _prefix._custom_field_data = {
-                    "solidserver_addr_id": attrs.get("nnn_id", "")}
+                    "solidserver_addr_id": str(attrs.get("nnn_id", "-1"))}
             _prefix.status = OrmStatus.objects.get(name="NO-IPAM-RECORD")
         else:
             # if attrs.get("status"):
@@ -167,8 +190,20 @@ class NautobotIPPrefix(IPPrefix):
         """Delete a nautobot IP address that matches this model"""
         self.diffsync.job.log_warning(
             f"Prefix {self.prefix} will be deleted.")
-        super().delete()
-        prefix = OrmPrefix.objects.get(**self.get_identifiers())
-        prefix.delete()
-        super().delete()
+        try:
+            self.diffsync.job.log_debug(
+                f"Trying prefix={self.get_identifiers().get('prefix')}"
+            )
+            prefix = OrmPrefix.objects.get(
+                prefix=self.get_identifiers().get('prefix')
+            )
+            prefix.delete()
+            super().delete()
+        except (OrmPrefix.DoesNotExist, ObjectDoesNotExist):
+            self.diffsync.job.log_warning(
+                f"Failed to delete {self.prefix}, got DoesNotExist error!"
+            )
+            self.diffsync.job.log_debug(
+                f"prefix={self.get_identifiers().get('prefix')} FAILED"
+            )
         return self

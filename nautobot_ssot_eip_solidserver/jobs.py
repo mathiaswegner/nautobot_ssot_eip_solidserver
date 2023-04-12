@@ -38,7 +38,7 @@ class SolidserverDataSource(DataSource, Job):
                        description="Enable for verbose debug logging.")
 
     class Meta:
-        name = "Solidserver-Source"
+        name = "Update Nautobot from Solidserver"
         data_source = "Solidserver"
         description = "Sync information from Solidserver to Nautobot"
         commit_default = True
@@ -119,7 +119,7 @@ class SolidserverDataSource(DataSource, Job):
             debug=self.kwargs.get('debug'),
             timeout=self.kwargs.get('solidserver_timeout'))
 
-        self.log_debug(message="Loading adapters and data")
+        self.log_info(message="Collecting data from EIP SOLIDServer")
         self.load_source_adapter(client, domain_list)
         try:
             message = f"Got {len(self.source_adapter.dict())} objects from SS"
@@ -132,6 +132,7 @@ class SolidserverDataSource(DataSource, Job):
             self.log_debug(message=message)
         except AttributeError:
             self.log_debug(message="Couldn't get length from source adapter")
+        self.log_info(message="Collecting data from Nautobot")
         self.load_target_adapter(domain_list)
         try:
             message = f"Got {len(self.target_adapter.dict())} objects from NB"

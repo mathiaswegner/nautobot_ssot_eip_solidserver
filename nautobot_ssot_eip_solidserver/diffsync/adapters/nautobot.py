@@ -39,7 +39,7 @@ class NautobotAdapter(DiffSync):
                 addr_id = int(ipaddr._custom_field_data.get(
                     'solidserver_addr_id'))
             except (AttributeError, TypeError, ValueError):
-                addr_id = None
+                addr_id = -1
             subnet_size = None
             if '/' in str(ipaddr.address):
                 split_addr = str(ipaddr.address).split('/')

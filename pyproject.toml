@@ -6,11 +6,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "nautobot-plugin-ssot-eip-solidserver"
-version = "0.0.4"
+version = "0.0.5"
 authors = [
   { name="Mathias Wegner", email="mwegner@isc.upenn.edu" },
 ]
-description = "first pass at SSoT plugin for EIP Solidserver"
+description = "SSoT plugin for EIP Solidserver"
 readme = ""
 requires-python = ">=3.7"
 classifiers = [
