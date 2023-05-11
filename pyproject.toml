@@ -24,4 +24,4 @@ classifiers = [
 # "Bug Tracker" = ""
 
 [tool.setuptools_scm]
-write_to = "nautobot_ssot_almo/_version.py"
+write_to = "nautobot_ssot_eip_solidserver/_version.py"
