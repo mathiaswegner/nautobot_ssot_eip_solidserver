@@ -1,16 +1,22 @@
+"""Job for runnning solidserver to nautobot data sync
+"""
 import netaddr
-from diffsync.enum import DiffSyncFlags
-from diffsync.exceptions import ObjectNotCreated
-from django.templatetags.static import static
+from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
+from django.urls import reverse
 from nautobot.extras.jobs import BooleanVar, IPNetworkVar, StringVar, Job, \
     IntegerVar
-from nautobot_ssot.jobs.base import DataSource
+from nautobot.ipam.models import IPAddress
+from nautobot.ipam.models import Prefix
+from nautobot_ssot.jobs.base import DataMapping, DataSource
+from nautobot_ssot_eip_solidserver import SSoTEIPSolidServerConfig
 from nautobot_ssot_eip_solidserver.utils import ssutils
 from nautobot_ssot_eip_solidserver.diffsync.adapters import nautobot, \
     solidserver
+from diffsync.enum import DiffSyncFlags
+from diffsync.exceptions import ObjectNotCreated
 
-
-DEFAULT_URL = 'https://dev.nnn.upenn.edu'
+DEFAULT_URL = SSoTEIPSolidServerConfig.default_settings.get('nnn_url')
 name = "SSoT EIP Solidserver"
 
 
@@ -19,8 +25,10 @@ class SolidserverDataSource(DataSource, Job):
 
     username = StringVar(required=False, label='Username')
     password = StringVar(required=False, label='Password')
-    solidserver_url = StringVar(required=True, default=DEFAULT_URL,
-                                label='SolidServer URL')
+    solidserver_url = StringVar(
+        required=True,
+        default=SSoTEIPSolidServerConfig.default_settings.get('nnn_url'),
+        label='SolidServer URL')
     domain_name_filter = StringVar(
         required=False, default='',
         label='Optional domain name filter',
@@ -38,6 +46,8 @@ class SolidserverDataSource(DataSource, Job):
                        description="Enable for verbose debug logging.")
 
     class Meta:
+        """Metadata about job
+        """
         name = "Update Nautobot from Solidserver"
         data_source = "Solidserver"
         description = "Sync information from Solidserver to Nautobot"
@@ -47,6 +57,41 @@ class SolidserverDataSource(DataSource, Job):
     def __init__(self):
         super().__init__()
         self.commit = True
+
+    @classmethod
+    def data_mappings(cls):
+        """List describing the data mappings involved in this DataSource."""
+        return (
+            DataMapping("IP Addresses", None, "IP Addresses",
+                        reverse("ipam:ipaddress_list")),
+            DataMapping("IP Prefixes", None, "IP Prefixes",
+                        reverse("ipam:prefix_list")),
+        )
+
+    @classmethod
+    def config_information(cls):
+        """Dictionary describing the configuration of this DataSource."""
+        return {
+            "SolidSERVER host": settings.PLUGIN_CONFIG.get(
+                "nnn_url", "NOT SET!"),
+            "SolidSERVER user": settings.PLUGIN_CONFIG.get(
+                "nnn_user", "NOT SET!"),
+            "Plugin version": SSoTEIPSolidServerConfig.version,
+            "Plugin build": SSoTEIPSolidServerConfig.build,
+        }
+
+    def lookup_object(self, model_name, unique_id):
+        """Look up a Nautobot object based on the DiffSync model name and
+        unique ID."""
+        obj = None
+        try:
+            if model_name == "address":
+                obj = IPAddress.objects.get(host=unique_id)
+            elif model_name == "prefix":
+                obj = Prefix.objects.get(prefix=unique_id)
+        except ObjectDoesNotExist:
+            pass
+        return obj
 
     def log_debug(self, message):
         """Conditionally log a debug message."""
@@ -81,6 +126,10 @@ class SolidserverDataSource(DataSource, Job):
 
     # def run(self, data, commit):
     def sync_data(self):
+        """SSoT plugin required sync_data method
+        Loads both adapters, gets data sets from both, runs diff
+        operation and, if commit, sync operation
+        """
         try:
             self.log_debug(f"commit {self.commit}")
         except AttributeError:
@@ -103,14 +152,10 @@ class SolidserverDataSource(DataSource, Job):
                 raise ValueError('Domain filter contains invalid domains')
             message = f"Domain filter list: {domain_list}"
             self.log_debug(message=message)
-        message = f"Fetch addresses {self.kwargs.get('fetch_addresses')}"
-        self.log_debug(message=message)
-        message = f"Fetch prefixes {self.kwargs.get('fetch_prefixes')}"
-        self.log_debug(message=message)
-        message = f"CIDR filter {self.kwargs.get('address_filter')}"
-        self.log_debug(message=message)
-        message = f"Name filter {self.kwargs.get('domain_name_filter')}"
-        self.log_debug(message=message)
+        self.log_debug(f"Fetch addresses {self.kwargs.get('fetch_addresses')}")
+        self.log_debug(f"Fetch prefixes {self.kwargs.get('fetch_prefixes')}")
+        self.log_debug(f"CIDR filter {self.kwargs.get('address_filter')}")
+        self.log_debug(f"Name filter {self.kwargs.get('domain_name_filter')}")
         self.log_debug(message='Creating Solidserver connection')
         client = ssutils.SolidServerAPI(
             username=self.kwargs.get('username'),
@@ -122,27 +167,26 @@ class SolidserverDataSource(DataSource, Job):
         self.log_info(message="Collecting data from EIP SOLIDServer")
         self.load_source_adapter(client, domain_list)
         try:
-            message = f"Got {len(self.source_adapter.dict())} objects from SS"
-            self.log_debug(message=message)
-            message = f"Keys: {self.source_adapter.dict().keys()}"
-            self.log_debug(message=message)
-            message = f"Prefixes: {self.source_adapter.dict().get('prefix', '')}"
-            self.log_debug(message=message)
-            message = f"Addresses: {self.source_adapter.dict().get('address', '')}"
-            self.log_debug(message=message)
+            self.log_debug(
+                f"Got {len(self.source_adapter.dict())} objects from SS")
+            self.log_debug(f"Keys: {self.source_adapter.dict().keys()}")
+            self.log_debug(
+                f"Prefixes: {self.source_adapter.dict().get('prefix', '')}")
+            self.log_debug(
+                f"Addresses: {self.source_adapter.dict().get('address', '')}")
         except AttributeError:
             self.log_debug(message="Couldn't get length from source adapter")
         self.log_info(message="Collecting data from Nautobot")
         self.load_target_adapter(domain_list)
         try:
-            message = f"Got {len(self.target_adapter.dict())} objects from NB"
-            self.log_debug(message=message)
-            message = f"Keys: {self.target_adapter.dict().keys()}"
-            self.log_debug(message=message)
-            message = f"Prefixes: {self.target_adapter.dict().get('prefix', '')}"
-            self.log_debug(message=message)
-            message = f"Addresses: {self.target_adapter.dict().get('address', '')}"
-            self.log_debug(message=message)
+            self.log_debug(
+                f"Got {len(self.target_adapter.dict())} objects from NB")
+            self.log_debug(
+                f"Keys: {self.target_adapter.dict().keys()}")
+            self.log_debug(
+                f"Prefixes: {self.target_adapter.dict().get('prefix', '')}")
+            self.log_debug(
+                f"Addresses: {self.target_adapter.dict().get('address', '')}")
         except AttributeError:
             self.log_debug(message="Couldn't get length from target adapter")
         diffsync_flags = DiffSyncFlags.CONTINUE_ON_FAILURE
@@ -153,10 +197,9 @@ class SolidserverDataSource(DataSource, Job):
         diff = self.source_adapter.diff_to(
             self.target_adapter, flags=diffsync_flags)
         self.sync.diff = diff.dict()
-        message = f"Found {len(diff)} differences"
-        self.log_info(message=message)
-        message = f"{self.sync.diff}"
-        self.log_info(message=message)
+        self.log_info(f"{self.sync.diff}")
+        self.log_info(f"Found {len(diff)} differences")
+
         self.sync.save()
 
         if not self.kwargs.get('dry_run'):
@@ -166,7 +209,6 @@ class SolidserverDataSource(DataSource, Job):
             except ObjectNotCreated as create_err:
                 self.log_debug(f"Unable to create object {create_err}")
             self.log_success(message="Sync complete.")
-            # self.sync_data()
 
 
 jobs = [SolidserverDataSource]

@@ -25,7 +25,7 @@ class IPPrefix(DiffSyncModel):
     _modelname = "prefix"
     _identifiers = ("prefix", )
     _shortname = ("prefix", )
-    _attributes = ("description", "nnn_id", "subnet_size",  )
+    _attributes = ("description", "nnn_id", "subnet_size", )
     # "uuid",
     # _children = {"ipaddress": "ipaddresses"}
     description: Optional[str]
