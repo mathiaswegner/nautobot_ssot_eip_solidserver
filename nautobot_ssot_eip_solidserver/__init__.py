@@ -1,24 +1,5 @@
-import os
-import pathlib
 from nautobot.apps import NautobotAppConfig
-
-
-def get_version():
-    """get the version with build number
-
-    Returns:
-        str: version with build
-    """
-    version_dir = pathlib.Path(__file__).parent
-    try:
-        with (version_dir / "_version.py").open("r") as version_file:
-            lines = version_file.readlines()
-            for line in lines:
-                if "__version__" in line:
-                    return line.split(" ")[-1].rstrip("'").strip("\n' ")
-            return "Build unknown"
-    except FileNotFoundError:
-        return "Build unknown"
+from nautobot_ssot_eip_solidserver.utils.ssutils import get_version
 
 
 class SSoTEIPSolidServerConfig(NautobotAppConfig):

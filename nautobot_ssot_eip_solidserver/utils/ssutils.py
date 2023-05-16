@@ -1,12 +1,19 @@
+"""Utility module for SSoT plugin for EIP Solidserver
+
+Raises:
+    AttributeError: _description_
+    SolidServerBaseError: _description_
+    SolidServerReturnedError: _description_
+    SolidServerBaseError: _description_
+"""
 import base64
 import json
 import logging
-import netaddr
+import pathlib
 import sys
-from typing import Any, Iterable, List, Optional, Tuple, Union
 import urllib.parse
-
 import certifi
+import netaddr
 import requests
 import validators
 
@@ -16,6 +23,24 @@ DOMAINS = ('.router.private.upenn.edu', '.dccs.private.upenn.edu',
            '.dccs.upenn.edu', '.net.isc.upenn.edu')
 LIMIT = 1000
 LOGGER = logging.Logger('ssot.solidserver')
+
+
+def get_version():
+    """get the version with build number
+
+    Returns:
+        str: version with build
+    """
+    version_dir = pathlib.Path(__file__).parent
+    try:
+        with (version_dir / "_version.py").open("r") as version_file:
+            lines = version_file.readlines()
+            for line in lines:
+                if "__version__" in line:
+                    return line.split(" ")[-1].rstrip("'").strip("\n' ")
+            return "Build unknown"
+    except FileNotFoundError:
+        return "Build unknown"
 
 
 def enable_ss_debug():
@@ -95,6 +120,16 @@ def prefix_to_net(prefix):
 
 
 def get_prefixes_by_network(nnn, cidr):
+    """Test a list of prefixes from the NNN session against a CIDR to see if
+    the prefix is contained within the CIDR
+
+    Args:
+        nnn (SolidServerAPI): Connected API session to SolidServer
+        cidr (str): A CIDR
+
+    Returns:
+        List: a list of prefixes that are subnets of the CIDR
+    """
     filtered_prefixes = []
     all_prefixes = get_all_prefixes(nnn)
     filter_cidr = netaddr.IPNetwork(cidr)
@@ -115,6 +150,15 @@ def get_prefixes_by_network(nnn, cidr):
 
 
 def get_addresses_by_network(nnn, cidr):
+    """Run queries for each address in a CIDR
+
+    Args:
+        nnn (SolidServerAPI): a connected solidserver api session
+        cidr (str): a cidr
+
+    Returns:
+        list: a list of address models
+    """
     ss_addrs = []
     LOGGER.debug("Starting get addresses by network")
     filter_cidr = netaddr.IPNetwork(cidr)

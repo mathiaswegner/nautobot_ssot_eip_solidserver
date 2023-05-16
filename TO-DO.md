@@ -30,14 +30,10 @@
 
     - make sure that all update, add, and delete actions have an info log
     - make sure that all errors have a warn or failure log
+    - re-do logging in general
+    - LINTING!
     - make sure that docstrings are present everywhere needed
     - investigate speed improvements
     - increase default runtime value
     - move UI defaults into config file
     - meet with NNN team for status labeling requirements, pushing data back to solidserver requirements
-
-## Reporting
-
-    - add data mapping
-    - add config_information
-    - add object_lookup

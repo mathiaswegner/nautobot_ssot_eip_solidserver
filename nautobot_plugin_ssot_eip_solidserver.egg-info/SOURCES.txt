@@ -1,10 +1,15 @@
+.gitignore
 README.md
+ReleaseNotes.md
+To-Do.md
+push_to_gitlab_registry.sh
 pyproject.toml
 nautobot_plugin_ssot_eip_solidserver.egg-info/PKG-INFO
 nautobot_plugin_ssot_eip_solidserver.egg-info/SOURCES.txt
 nautobot_plugin_ssot_eip_solidserver.egg-info/dependency_links.txt
 nautobot_plugin_ssot_eip_solidserver.egg-info/top_level.txt
 nautobot_ssot_eip_solidserver/__init__.py
+nautobot_ssot_eip_solidserver/_version.py
 nautobot_ssot_eip_solidserver/jobs.py
 nautobot_ssot_eip_solidserver/diffsync/adapters/nautobot.py
 nautobot_ssot_eip_solidserver/diffsync/adapters/solidserver.py

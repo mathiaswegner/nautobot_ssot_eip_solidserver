@@ -16,18 +16,20 @@ from nautobot_ssot_eip_solidserver.diffsync.adapters import nautobot, \
 from diffsync.enum import DiffSyncFlags
 from diffsync.exceptions import ObjectNotCreated
 
-DEFAULT_URL = SSoTEIPSolidServerConfig.default_settings.get('nnn_url')
+PLUGINS_CONFIG = settings.PLUGINS_CONFIG["nautobot_ssot_eip_solidserver"]
 name = "SSoT EIP Solidserver"
 
 
 class SolidserverDataSource(DataSource, Job):
     """Solidserver SSoT Data Source."""
 
-    username = StringVar(required=False, label='Username')
-    password = StringVar(required=False, label='Password')
+    username = StringVar(required=False, label='Username',
+                         default=PLUGINS_CONFIG.get("nnn_user"))
+    password = StringVar(required=False, label='Password',
+                         default=PLUGINS_CONFIG.get("nnn_credential"))
     solidserver_url = StringVar(
         required=True,
-        default=SSoTEIPSolidServerConfig.default_settings.get('nnn_url'),
+        default=PLUGINS_CONFIG.get("nnn_url"),
         label='SolidServer URL')
     domain_name_filter = StringVar(
         required=False, default='',
@@ -72,9 +74,9 @@ class SolidserverDataSource(DataSource, Job):
     def config_information(cls):
         """Dictionary describing the configuration of this DataSource."""
         return {
-            "SolidSERVER host": settings.PLUGIN_CONFIG.get(
+            "SolidSERVER host": PLUGINS_CONFIG.get(
                 "nnn_url", "NOT SET!"),
-            "SolidSERVER user": settings.PLUGIN_CONFIG.get(
+            "SolidSERVER user": PLUGINS_CONFIG.get(
                 "nnn_user", "NOT SET!"),
             "Plugin version": SSoTEIPSolidServerConfig.version,
             "Plugin build": SSoTEIPSolidServerConfig.build,
