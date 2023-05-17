@@ -1,3 +1,5 @@
+"""CRUD Nautobot objects from DiffSync models via ORM
+"""
 from django.core.exceptions import ObjectDoesNotExist
 from nautobot.extras.models import Status as OrmStatus
 from nautobot.ipam.models import IPAddress as OrmIPAddress
@@ -12,13 +14,6 @@ class NautobotIPAddress(IPAddress):
     @classmethod
     def create(cls, diffsync, ids, attrs):
         """Create a nautobot IP address from this model"""
-        # self.diffsync.job.log_info(f"Creating address {ids['address']}")
-        # if attrs["status"]:
-        #     try:
-        #         status = OrmStatus.objects.get(name=attrs["status"])
-        #     except nautobot.extras.models.statuses.Status.DoesNotExist:
-        #         status = OrmStatus.objects.get(name="Unknown")
-        # else:
         status = OrmStatus.objects.get(name="Imported From Solidserver")
         new_address = OrmIPAddress(
             host=ids["address"], prefix_length=attrs["subnet_size"],
@@ -37,10 +32,10 @@ class NautobotIPAddress(IPAddress):
         if len(attrs) == 1 and 'status' in attrs.keys():
             return
         if '/' in self.address:
-            host_addr = str(self.address).split('/')[0]
+            host_addr = str(self.address).split('/', maxsplit=1)[0]
         else:
             host_addr = str(self.address)
-        self.diffsync.job.log_debug(f"In update, about to get addr object")
+        self.diffsync.job.log_debug("In update, about to get addr object")
         try:
             _address = OrmIPAddress.objects.get(host=host_addr)
         except (AttributeError, OrmIPAddress.DoesNotExist) as err:
@@ -63,12 +58,6 @@ class NautobotIPAddress(IPAddress):
                 f"Setting nnn_id to {attrs.get('nnn_id')} as update in place")
             _address._custom_field_data["solidserver_addr_id"] = \
                 str(attrs.get("nnn_id", "-1"))
-            # if attrs.get("status"):
-            #     try:
-            #         _address.status = OrmStatus.objects.get(
-            #             name=attrs["status"])
-            #     except nautobot.extras.models.statuses.Status.DoesNotExist:
-            #         _address.status = OrmStatus.objects.get(name="Unknown")
         elif attrs.get("dns_name") == "":
             self.diffsync.job.log_debug(
                 "Setting nnn_id to -1 after dns_name == ''"
@@ -82,11 +71,6 @@ class NautobotIPAddress(IPAddress):
                 _address._custom_field_data = {"solidserver_addr_id": "-1"}
             _address.status = OrmStatus.objects.get(name="NO-IPAM-RECORD")
         else:
-            # if attrs.get("status"):
-            #     try:
-            #         _address.status = OrmStatus.objects.get(
-            #             name=attrs["status"])
-            #     except nautobot.extras.models.statuses.Status.DoesNotExist:
             _address.status = OrmStatus.objects.get(name="Unknown")
         try:
             _address.validated_save()
@@ -142,13 +126,13 @@ class NautobotIPPrefix(IPPrefix):
 
     def update(self, attrs):
         """Update a nautobot IP address from this model"""
-        cls.diffsync.job.log_info(f"Updating prefix {self.prefix}")
+        self.diffsync.job.log_info(f"Updating prefix {self.prefix}")
         try:
             _prefix = OrmPrefix.objects.get(network=self.prefix)
         except (AttributeError, OrmPrefix.DoesNotExist) as err:
             message = f"Failed to update prefix with attrs {attrs}, {err}"
             self.diffsync.job.log_warning(message)
-            return
+            return None
         if attrs.get("description"):
             _prefix.description = attrs["description"]
         if attrs.get("subnet_size"):
@@ -160,10 +144,6 @@ class NautobotIPPrefix(IPPrefix):
             except (AttributeError, KeyError):
                 _prefix._custom_field_data = {
                     "solidserver_addr_id": str(attrs.get("nnn_id", "-1"))}
-            # try:
-            #     _prefix.status = OrmStatus.objects.get(name=attrs["status"])
-            # except nautobot.extras.models.statuses.Status.DoesNotExist:
-            #     _prefix.status = OrmStatus.objects.get(name="Unknown")
         elif attrs.get("description") == "":
             try:
                 _prefix._custom_field_data["solidserver_addr_id"] = "-1"
@@ -172,18 +152,13 @@ class NautobotIPPrefix(IPPrefix):
                     "solidserver_addr_id": str(attrs.get("nnn_id", "-1"))}
             _prefix.status = OrmStatus.objects.get(name="NO-IPAM-RECORD")
         else:
-            # if attrs.get("status"):
-            #     try:
-            #         _prefix.status = OrmStatus.objects.get(
-            #             name=attrs["status"])
-            #     except nautobot.extras.models.statuses.Status.DoesNotExist:
             _prefix.status = OrmStatus.objects.get(name="Unknown")
         try:
             _prefix.validated_save()
         except Exception as catchall:
             message = f"Failed to update {self.prefix}: {catchall}"
             self.diffsync.job.log_warning(message)
-            return
+            return None
         return super().update(attrs)
 
     def delete(self):

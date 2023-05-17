@@ -7,6 +7,7 @@ build-backend = "setuptools.build_meta"
 name = "nautobot-plugin-ssot-eip-solidserver"
 # version = "0.0.5"
 dynamic = ["version"]
+keywords = ["nautobot", "plugin", "solidserver"]
 authors = [
   { name="Mathias Wegner", email="mwegner@isc.upenn.edu" },
 ]
@@ -15,8 +16,10 @@ readme = "README.md"
 requires-python = ">=3.7"
 classifiers = [
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
+]
+dependencies = [
+  "validators~=0.20.0"
 ]
 
 [project.urls]

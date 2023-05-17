@@ -42,7 +42,7 @@ class SolidserverDataSource(DataSource, Job):
                                  label="Compare and sync addresses")
     fetch_prefixes = BooleanVar(required=False, default=False,
                                 label="Compare and sync prefixes")
-    solidserver_timeout = IntegerVar(required=False, default=60,
+    solidserver_timeout = IntegerVar(required=False, default=120,
                                      label="Timeout (sec) for Solidserver")
     debug = BooleanVar(required=False, default=False,
                        description="Enable for verbose debug logging.")
@@ -59,6 +59,9 @@ class SolidserverDataSource(DataSource, Job):
     def __init__(self):
         super().__init__()
         self.commit = True
+        self.domain_filter = None
+        self.address_filter = None
+        self.client = None
 
     @classmethod
     def data_mappings(cls):
@@ -100,20 +103,20 @@ class SolidserverDataSource(DataSource, Job):
         if self.kwargs.get("debug"):
             super().log_debug(message)
 
-    def load_source_adapter(self, client, domain_list):
+    def load_source_adapter(self):
         """Method to instantiate and load the SOURCE adapter into
         `self.source_adapter`."""
         self.log_debug(message="Creating Solidserver adapter")
         self.source_adapter = solidserver.SolidserverAdapter(
-            job=self, conn=client, sync=self.sync)
+            job=self, conn=self.client, sync=self.sync)
         self.log_debug(message="Running Solidserver .load()")
         self.source_adapter.load(addrs=self.kwargs.get('fetch_addresses'),
                                  prefixes=self.kwargs.get('fetch_prefixes'),
                                  address_filter=self.kwargs.get(
                                     'address_filter'),
-                                 domain_filter=domain_list)
+                                 domain_filter=self.domain_filter)
 
-    def load_target_adapter(self, domain_list):
+    def load_target_adapter(self):
         """Method to instantiate and load the TARGET adapter into
         `self.target_adapter`."""
         self.log_debug(message="Creating Nautobot adapter")
@@ -124,7 +127,7 @@ class SolidserverDataSource(DataSource, Job):
                                  prefixes=self.kwargs.get('fetch_prefixes'),
                                  address_filter=self.kwargs.get(
                                     'address_filter'),
-                                 domain_filter=domain_list)
+                                 domain_filter=self.domain_filter)
 
     # def run(self, data, commit):
     def sync_data(self):
@@ -144,22 +147,21 @@ class SolidserverDataSource(DataSource, Job):
                 self.log_failure(message='Address filter is not a CIDR')
                 raise ValueError('Address filter is not a CIDR') \
                     from addr_err
-        domain_list = []
         if self.kwargs.get('domain_name_filter'):
-            domain_list, errors = ssutils.domain_name_prep(self.kwargs.get(
-                    'domain_name_filter'))
+            self.domain_filter, errors = ssutils.domain_name_prep(
+                self.kwargs.get('domain_name_filter'))
             if errors:
                 for each_err in errors:
                     self.log_failure(message=each_err)
                 raise ValueError('Domain filter contains invalid domains')
-            message = f"Domain filter list: {domain_list}"
+            message = f"Domain filter list: {self.domain_filter}"
             self.log_debug(message=message)
         self.log_debug(f"Fetch addresses {self.kwargs.get('fetch_addresses')}")
         self.log_debug(f"Fetch prefixes {self.kwargs.get('fetch_prefixes')}")
         self.log_debug(f"CIDR filter {self.kwargs.get('address_filter')}")
         self.log_debug(f"Name filter {self.kwargs.get('domain_name_filter')}")
         self.log_debug(message='Creating Solidserver connection')
-        client = ssutils.SolidServerAPI(
+        self.client = ssutils.SolidServerAPI(
             username=self.kwargs.get('username'),
             password=self.kwargs.get('password'),
             base_url=self.kwargs.get('solidserver_url'),
@@ -167,7 +169,7 @@ class SolidserverDataSource(DataSource, Job):
             timeout=self.kwargs.get('solidserver_timeout'))
 
         self.log_info(message="Collecting data from EIP SOLIDServer")
-        self.load_source_adapter(client, domain_list)
+        self.load_source_adapter()
         try:
             self.log_debug(
                 f"Got {len(self.source_adapter.dict())} objects from SS")
@@ -179,7 +181,7 @@ class SolidserverDataSource(DataSource, Job):
         except AttributeError:
             self.log_debug(message="Couldn't get length from source adapter")
         self.log_info(message="Collecting data from Nautobot")
-        self.load_target_adapter(domain_list)
+        self.load_target_adapter()
         try:
             self.log_debug(
                 f"Got {len(self.target_adapter.dict())} objects from NB")
@@ -209,7 +211,7 @@ class SolidserverDataSource(DataSource, Job):
             try:
                 self.source_adapter.sync_to(self.target_adapter)
             except ObjectNotCreated as create_err:
-                self.log_debug(f"Unable to create object {create_err}")
+                self.log_failure(f"Unable to create object {create_err}")
             self.log_success(message="Sync complete.")
 
 

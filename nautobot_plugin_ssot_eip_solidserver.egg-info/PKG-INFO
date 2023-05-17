@@ -1,10 +1,10 @@
 Metadata-Version: 2.1
 Name: nautobot-plugin-ssot-eip-solidserver
-Version: 0.0.6.dev2+g164e10f.d20230511
+Version: 0.0.6.dev3+gd013697.d20230517
 Summary: Nautobot SSoT plugin for EIP Solidserver
 Author-email: Mathias Wegner <mwegner@isc.upenn.edu>
+Keywords: nautobot,plugin,solidserver
 Classifier: Programming Language :: Python :: 3
-Classifier: License :: OSI Approved :: MIT License
 Classifier: Operating System :: OS Independent
 Requires-Python: >=3.7
 Description-Content-Type: text/markdown

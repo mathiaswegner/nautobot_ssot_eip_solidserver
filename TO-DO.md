@@ -20,11 +20,11 @@
 ## jobs
 
     - add job for pushing data back to solidserver
+    - remove user/password settings from GUI
 
 ## utils
 
     - re-work ssutils to move solidserver client inside adapter
-    - move credentials from GUI to env (unless JOB has a different preference)
 
 ## housekeeping
 
@@ -32,8 +32,6 @@
     - make sure that all errors have a warn or failure log
     - re-do logging in general
     - LINTING!
-    - make sure that docstrings are present everywhere needed
     - investigate speed improvements
     - increase default runtime value
-    - move UI defaults into config file
     - meet with NNN team for status labeling requirements, pushing data back to solidserver requirements

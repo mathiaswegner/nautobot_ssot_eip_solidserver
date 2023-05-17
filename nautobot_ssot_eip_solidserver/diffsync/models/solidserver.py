@@ -1,3 +1,5 @@
+"""Stub model for loading nautobot data back to solidserver.
+"""
 from nautobot_ssot_eip_solidserver.diffsync.models.base import IPAddress, \
     IPPrefix
 
@@ -8,21 +10,15 @@ class SolidserverIPAddress(IPAddress):
     @classmethod
     def update(cls, attrs):
         """Update solidserver with new attr data"""
-        # json = {"configure_for_dns": False}
-        # if attrs.get("description"):
-        #     json.update({"comment": attrs["description"]})
-        # if attrs.get("dns_name"):
-        #     json.update({"name": attrs["dns_name"]})
-        # if json:
-        #     self.diffsync.conn.update_ipaddress(
-        # ip_address=self.get_identifiers()["address"], data=json)
         return super().update(attrs)
 
     @classmethod
     def create(cls, diffsync, ids, attrs):
+        """Create new addr from ids, attrs"""
         return super().create(attrs)
 
     def delete(self):
+        """Delete address"""
         return super().delete()
 
 
@@ -32,19 +28,13 @@ class SolidserverIPPrefix(IPPrefix):
     @classmethod
     def update(cls, attrs):
         """Update solidserver with new attr data"""
-        # json = {"configure_for_dns": False}
-        # if attrs.get("description"):
-        #     json.update({"comment": attrs["description"]})
-        # if attrs.get("dns_name"):
-        #     json.update({"name": attrs["dns_name"]})
-        # if json:
-        #     self.diffsync.conn.update_ipaddress(
-        # ip_address=self.get_identifiers()["address"], data=json)
         return super().update(attrs)
 
     @classmethod
     def create(cls, diffsync, ids, attrs):
+        """Create new prefix from ids, attrs"""
         return super().create(attrs)
 
     def delete(self):
+        """Delete prefix"""
         return super().delete()

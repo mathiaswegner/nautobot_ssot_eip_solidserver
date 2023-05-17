@@ -1,10 +1,19 @@
-### 0.0.5
+# Release Notes
+
+## 0.1.0 (pending)
+
+    - moved username and password from job UI to env vars
+    - added data mapping, config information, and object lookups to job
+
+## 0.0.5
+
     - works with IP addresses in cloud instance
     - CIDR address filter works in cloud instance
     - fixed bugs preventing cloud instance from working
     - fixed bug preventing IP address deletes from succeeding
 
-### pre-0.0.5
+## pre-0.0.5
+
     - first pass at a working SSoT plugin
     - added CIDR filtering
     - added domain name filter

@@ -44,6 +44,8 @@ def get_version():
 
 
 def enable_ss_debug():
+    """Setting up debugging for solidserver
+    """
     logging.basicConfig(
         stream=sys.stdout,
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -51,10 +53,26 @@ def enable_ss_debug():
 
 
 def unpack_class_params(params):
+    """convert class parameters into a dictionary
+
+    Args:
+        params (str): the url encoded class parameters
+
+    Returns:
+        dict: unencoded and dictified class parameters
+    """
     return dict(urllib.parse.parse_qsl(params, keep_blank_values=True))
 
 
 def domain_name_prep(domain_filter):
+    """ensure correct formattincg in domain name filter(s)
+
+    Args:
+        domain_filter (str): a comma separated list of domain filters
+
+    Returns:
+        list: one list of valid domains, one list of errors
+    """
     domain_list = []
     errors = []
     for each_domain in domain_filter.split(','):
@@ -68,6 +86,15 @@ def domain_name_prep(domain_filter):
 
 
 def get_prefixes_by_id(nnn, subnet_list):
+    """take a list of unique ids, fetch them from solidserver
+
+    Args:
+        nnn (SolidServerAPI): connected solidserver session
+        subnet_list (list): a list of subnet IDs
+
+    Returns:
+        list: a list of prefix resources
+    """
     prefixes = []
     params = {'LIMIT': LIMIT}
     for each_id in subnet_list:
@@ -86,6 +113,14 @@ def get_prefixes_by_id(nnn, subnet_list):
 
 
 def get_all_prefixes(nnn):
+    """Get all IP prefixes from solidserver
+
+    Args:
+        nnn (SolidServerAPI): a connected solidserver session
+
+    Returns:
+        list: a list of all prefix resources
+    """
     prefixes = []
     params = {'LIMIT': LIMIT}
     for action in ['ip_block_subnet_list', 'ip6_block6_subnet6_list']:
@@ -107,6 +142,14 @@ def get_all_prefixes(nnn):
 
 
 def prefix_to_net(prefix):
+    """convert prefix record to netaddr network object
+
+    Args:
+        prefix (dict): a solidserver prefix record
+
+    Returns:
+        netaddr.IPNetwork or None: a netaddr representation of the prefix
+    """
     if prefix.get('subnet_id'):
         binary_size = str(bin(int(prefix.get('subnet_size')))).lstrip('0b')
         size = 32 - binary_size.count('0')
@@ -180,6 +223,15 @@ def get_addresses_by_network(nnn, cidr):
 
 
 def get_addresses_by_name(nnn, domain_list):
+    """Iterate through list of domains, running query once per list
+
+    Args:
+        nnn (SolidServerAPI): connected Solidserver session
+        domain_list (list): list of domain filters
+
+    Returns:
+        list: a list of solidserver records
+    """
     ss_addrs = []
     for each_domain in domain_list:
         each_domain = f"{each_domain}"
@@ -194,6 +246,15 @@ def get_addresses_by_name(nnn, domain_list):
 
 
 def get_solidserver_batch(nnn, domain_name):
+    """Run a query for all addresses matching a single domain nname
+
+    Args:
+        nnn (SolidServerAPI): connected Solidserver session
+        domain_name (str): a domain name
+
+    Returns:
+        list: a list of solidserver records
+    """
     params = {'limit': LIMIT}
     result = []
     count_action = {'ip_address_list': ('ip_address_count', 'name'),
@@ -348,6 +409,7 @@ class SolidServerAPI():
             self.__attributes['timeout'] = 60
 
     def set_creds(self, username, password):
+        """Set the credentials in the session header"""
         self.username = username
         self.password = password
         user64 = base64.b64encode(self.username.encode('ascii')) or ''

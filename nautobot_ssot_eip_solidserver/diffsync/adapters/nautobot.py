@@ -1,10 +1,12 @@
+"""Adapt Nautobot ORM objects into diffsync models
+"""
 import netaddr
-from diffsync import DiffSync
-from diffsync.exceptions import ObjectAlreadyExists
 from nautobot.ipam.models import IPAddress as OrmIPAddress
 from nautobot.ipam.models import Prefix as OrmIPPrefix
 from nautobot_ssot_eip_solidserver.diffsync.models.nautobot import \
     NautobotIPAddress, NautobotIPPrefix
+from diffsync import DiffSync
+from diffsync.exceptions import ObjectAlreadyExists
 
 
 class NautobotAdapter(DiffSync):
@@ -22,6 +24,12 @@ class NautobotAdapter(DiffSync):
         self.sync = sync
 
     def _load_filtered_ip_addresses(self, filter_field, this_filter):
+        """Collect ip addresses from ORM, create models, load into diffsync
+
+        Args:
+            filter_field (str): type of filter
+            this_filter (str or list): the filter data for this IP load
+        """
         if filter_field == 'host__net_in':
             if not isinstance(this_filter, list):
                 this_filter = [this_filter]
@@ -53,16 +61,22 @@ class NautobotAdapter(DiffSync):
                 description=ipaddr.description,
                 nnn_id=addr_id,
                 subnet_size=subnet_size
-                # status=ipaddr.status.name
             )
             message = f"Loaded address {this_addr}"
             self.job.log_debug(message=message)
             try:
                 self.add(new_ip)
             except ObjectAlreadyExists as err:
-                self.job.log_warning(message=f"Unable to load {ipaddr.address} as appears to be a duplicate. {err}")
+                self.job.log_warning(
+                    f"Unable to load duplicate {ipaddr.address}. {err}")
 
     def _load_filtered_ip_prefixes(self, filter_field, this_filter):
+        """Collect ip prefixes from ORM, create models, load into diffsync
+
+        Args:
+            filter_field (str): filter type
+            this_filter (str): the filter to use
+        """
         if filter_field == 'prefix__net_contains':
             filtered_prefixes = OrmIPPrefix.objects.filter(
                 network__net_contains=this_filter)
@@ -83,7 +97,8 @@ class NautobotAdapter(DiffSync):
             try:
                 self.add(new_prefix)
             except ObjectAlreadyExists as err:
-                self.job.log_warning(message=f"Unable to load {new_prefix.prefix} as appears to be a duplicate. {err}")
+                self.job.log_warning(
+                    f"Unable to load duplicate {new_prefix.prefix}. {err}")
 
     def _load_ip_addresses(self, address_filter=None, domain_filter=None):
         """Add Nautobot IPAddress objects as DiffSync IPAddress models."""
@@ -128,16 +143,16 @@ class NautobotAdapter(DiffSync):
                     description=ipaddr.description,
                     nnn_id=addr_id,
                     subnet_size=subnet_size
-                    # status=ipaddr.status.name
                 )
                 message = f"Loaded address {this_addr}"
                 self.job.log_debug(message=message)
                 try:
                     self.add(new_ip)
                 except ObjectAlreadyExists as err:
-                    self.job.log_warning(message=f"Unable to load {ipaddr.address} as appears to be a duplicate. {err}")
+                    self.job.log_warning(
+                        f"Unable to load duplicate {ipaddr.address}. {err}")
 
-    def _load_ip_prefixes(self, address_filter, domain_filter):
+    def _load_ip_prefixes(self, address_filter):
         """Add Nautobot IPPrefix objects as DiffSync IPPrefix models."""
         # TO-DO add filters for domain name, CIDR
         if address_filter:
@@ -171,14 +186,26 @@ class NautobotAdapter(DiffSync):
                 try:
                     self.add(new_prefix)
                 except ObjectAlreadyExists as err:
-                    self.job.log_warning(message=f"Unable to load {new_prefix.prefix} as appears to be a duplicate. {err}")
+                    self.job.log_warning(
+                        f"Unable to load duplicate {new_prefix.prefix}. {err}")
 
     def load(self, addrs=True, prefixes=True, address_filter=None,
              domain_filter=None):
+        """jobs facing method, coordinates which private methods to run and
+        handle arguments
+
+        Args:
+            addrs (bool, optional): Load addresses? Defaults to True.
+            prefixes (bool, optional): Load prefixes? Defaults to True.
+            address_filter (_type_, optional): Filter to use with addresses.
+              Defaults to None.
+            domain_filter (_type_, optional): Filter to use with prefixes.
+              Defaults to None.
+        """
         super().load()
         if addrs:
             self.job.log_info(message="Starting to load IP addresses")
             self._load_ip_addresses(address_filter, domain_filter)
         if prefixes:
             self.job.log_info(message="Starting to load prefixes")
-            self._load_ip_prefixes(address_filter, domain_filter)
+            self._load_ip_prefixes(address_filter)

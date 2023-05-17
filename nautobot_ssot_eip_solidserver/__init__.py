@@ -1,8 +1,10 @@
+"""Application config"""
 from nautobot.apps import NautobotAppConfig
 from nautobot_ssot_eip_solidserver.utils.ssutils import get_version
 
 
 class SSoTEIPSolidServerConfig(NautobotAppConfig):
+    """Application config"""
     name = 'nautobot_ssot_eip_solidserver'
     verbose_name = 'SSoT EIP Solidserver'
     description = \
