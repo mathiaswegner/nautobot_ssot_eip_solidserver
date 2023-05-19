@@ -1,5 +1,9 @@
 #!/bin/sh
 
+echo "python3 -m twine upload --repository gitlab-nautobot-plugins dist/*"
+
+exit
+
 cd dist
 if [ ! $GITLAB_KEY ]; then
   echo "No GITLAB_KEY environment variable!"

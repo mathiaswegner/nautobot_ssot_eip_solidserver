@@ -266,6 +266,7 @@ class SolidserverAdapter(DiffSync):
                     self.job.log_warning(
                         f"_load_prefixes() Unable to load {new_prefix.prefix} "
                         + f"as appears to be a duplicate. {err}")
+                    self.job.log_debug(f"prefix: {new_prefix.__dict__}")
 
     def load(self, addrs=True, prefixes=True, address_filter=None,
              domain_filter=None):

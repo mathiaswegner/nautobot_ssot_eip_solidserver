@@ -1,5 +1,6 @@
 """Job for runnning solidserver to nautobot data sync
 """
+from pprint import pformat
 import netaddr
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
@@ -62,6 +63,9 @@ class SolidserverDataSource(DataSource, Job):
         self.domain_filter = None
         self.address_filter = None
         self.client = None
+        self.diffsync_flags = DiffSyncFlags.CONTINUE_ON_FAILURE \
+            | DiffSyncFlags.LOG_UNCHANGED_RECORDS \
+            | DiffSyncFlags.SKIP_UNMATCHED_DST
 
     @classmethod
     def data_mappings(cls):
@@ -172,7 +176,11 @@ class SolidserverDataSource(DataSource, Job):
         self.load_source_adapter()
         try:
             self.log_debug(
-                f"Got {len(self.source_adapter.dict())} objects from SS")
+                f"Got {len(self.source_adapter.dict().get('prefix', []))} "
+                + "prefixes from SS")
+            self.log_debug(
+                f"Got {len(self.source_adapter.dict().get('address', []))} "
+                + "addresses from SS")
             self.log_debug(f"Keys: {self.source_adapter.dict().keys()}")
             self.log_debug(
                 f"Prefixes: {self.source_adapter.dict().get('prefix', '')}")
@@ -184,7 +192,11 @@ class SolidserverDataSource(DataSource, Job):
         self.load_target_adapter()
         try:
             self.log_debug(
-                f"Got {len(self.target_adapter.dict())} objects from NB")
+                f"Got {len(self.target_adapter.dict().get('prefix', []))} "
+                + "prefixes from NB")
+            self.log_debug(
+                f"Got {len(self.target_adapter.dict().get('address', []))} "
+                + "addresses from NB")
             self.log_debug(
                 f"Keys: {self.target_adapter.dict().keys()}")
             self.log_debug(
@@ -193,18 +205,12 @@ class SolidserverDataSource(DataSource, Job):
                 f"Addresses: {self.target_adapter.dict().get('address', '')}")
         except AttributeError:
             self.log_debug(message="Couldn't get length from target adapter")
-        diffsync_flags = DiffSyncFlags.CONTINUE_ON_FAILURE
-        diffsync_flags |= DiffSyncFlags.LOG_UNCHANGED_RECORDS
-        diffsync_flags |= DiffSyncFlags.SKIP_UNMATCHED_DST
 
-        self.log_info(message="Calculating diffs...")
-        diff = self.source_adapter.diff_to(
-            self.target_adapter, flags=diffsync_flags)
-        self.sync.diff = diff.dict()
-        self.log_info(f"{self.sync.diff}")
+        self.log_info("Calculating diffs...")
+        diff = self.source_adapter.diff_to(self.target_adapter)
         self.log_info(f"Found {len(diff)} differences")
-
-        self.sync.save()
+        self.log_info(f"{diff.summary()}")
+        self.log_debug(pformat(diff.dict()))
 
         if not self.kwargs.get('dry_run'):
             self.commit = True
