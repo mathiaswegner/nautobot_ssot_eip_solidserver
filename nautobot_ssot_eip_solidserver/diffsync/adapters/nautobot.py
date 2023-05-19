@@ -77,6 +77,8 @@ class NautobotAdapter(DiffSync):
             filter_field (str): filter type
             this_filter (str): the filter to use
         """
+        self.job.log_debug(
+            f"Getting prefixes in {this_filter}")
         if filter_field == 'prefix__net_contained_or_equal':
             filtered_prefixes = OrmIPPrefix.objects.filter(
                 network__net_contained_or_equal=this_filter)
@@ -204,12 +206,12 @@ class NautobotAdapter(DiffSync):
         Args:
             addrs (bool, optional): Load addresses? Defaults to True.
             prefixes (bool, optional): Load prefixes? Defaults to True.
-            address_filter (_type_, optional): Filter to use with addresses.
+            address_filter (netaddr.IPNetwork, optional): Filter to use
+            with addresses/prefixes.
               Defaults to None.
-            domain_filter (_type_, optional): Filter to use with prefixes.
+            domain_filter (str, optional): Filter to use with prefixes.
               Defaults to None.
         """
-        super().load()
         if addrs:
             self.job.log_info(message="Starting to load IP addresses")
             self._load_ip_addresses(address_filter, domain_filter)
