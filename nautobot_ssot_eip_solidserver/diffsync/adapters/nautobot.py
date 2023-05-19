@@ -77,12 +77,14 @@ class NautobotAdapter(DiffSync):
             filter_field (str): filter type
             this_filter (str): the filter to use
         """
-        if filter_field == 'prefix__net_contains':
+        if filter_field == 'prefix__net_contained_or_equal':
             filtered_prefixes = OrmIPPrefix.objects.filter(
-                network__net_contains=this_filter)
+                network__net_contained_or_equal=this_filter)
         elif filter_field == 'prefix':
             filtered_prefixes = OrmIPPrefix.objects.filter(
                 network=this_filter)
+        self.job.log_debug(
+            f"Processing {len(filtered_prefixes)} prefixes")
         for prefix in filtered_prefixes:
             try:
                 addr_id = int(prefix.custom_fields.solidserver_addr_id)
@@ -90,6 +92,7 @@ class NautobotAdapter(DiffSync):
                 addr_id = None
             new_prefix = self.prefix(
                 prefix=str(prefix.network),
+                subnet_size=prefix.prefix_length,
                 description=prefix.description,
                 # status=prefix.status.name,
                 nnn_id=addr_id
@@ -154,7 +157,7 @@ class NautobotAdapter(DiffSync):
 
     def _load_ip_prefixes(self, address_filter):
         """Add Nautobot IPPrefix objects as DiffSync IPPrefix models."""
-        # TO-DO add filters for domain name, CIDR
+        # TO-DO add filters for domain name
         if address_filter:
             try:
                 this_cidr = netaddr.IPNetwork(address_filter)
@@ -162,7 +165,8 @@ class NautobotAdapter(DiffSync):
                 raise ValueError('Invalid network CIDR') from valerr
             this_filter = f"{str(this_cidr)}"  # prefix__net_contains
             self._load_filtered_ip_prefixes(
-                filter_field='prefix__net_contains', this_filter=this_filter)
+                filter_field='prefix__net_contained_or_equal',
+                this_filter=this_filter)
         # if domain_filter:
         #     for each_net in domain_filter:
         #         this_filter = f"{each_net}"  # prefix
@@ -172,6 +176,8 @@ class NautobotAdapter(DiffSync):
         if not address_filter:
             # for now, getting all prefixes when domain filter is present
             # there's not a good way to map domain name to prefix.
+            self.job.log_debug(
+                f"Processing {len(OrmIPPrefix.objects.all())} prefixes")
             for prefix in OrmIPPrefix.objects.all():
                 try:
                     addr_id = int(prefix.custom_fields.solidserver_addr_id)
@@ -179,6 +185,7 @@ class NautobotAdapter(DiffSync):
                     addr_id = None
                 new_prefix = self.prefix(
                     prefix=str(prefix.network),
+                    subnet_size=prefix.prefix_length,
                     description=prefix.description,
                     # status=prefix.status.name,
                     nnn_id=addr_id

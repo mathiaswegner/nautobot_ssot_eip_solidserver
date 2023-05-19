@@ -8,7 +8,6 @@ class IPAddress(DiffSyncModel):
     """IP address model for solidserver ssot plugin"""
     _modelname = "address"
     _identifiers = ("address", )
-    _shortname = ("address", )
     _attributes = ("dns_name", "nnn_id", "subnet_size",
                    "description", )
     dns_name: Optional[str]
@@ -21,9 +20,8 @@ class IPAddress(DiffSyncModel):
 class IPPrefix(DiffSyncModel):
     """IP prefix model for solidserver ssot plugin"""
     _modelname = "prefix"
-    _identifiers = ("prefix", )
-    _shortname = ("prefix", )
-    _attributes = ("description", "nnn_id", "subnet_size", )
+    _identifiers = ("prefix", "subnet_size")
+    _attributes = ("description", "nnn_id", )
 
     description: Optional[str]
     prefix: str

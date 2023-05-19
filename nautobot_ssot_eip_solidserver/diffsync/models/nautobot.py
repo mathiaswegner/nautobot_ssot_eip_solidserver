@@ -115,7 +115,7 @@ class NautobotIPPrefix(IPPrefix):
         # else:
         status = OrmStatus.objects.get(name="Imported From Solidserver")
         new_prefix = OrmPrefix(
-            prefix=ids['prefix'], prefix_length=attrs['subnet_size'],
+            prefix=ids['prefix'], prefix_length=ids['subnet_size'],
             description=attrs.get("description", ""),
             status=status
         )
@@ -135,8 +135,6 @@ class NautobotIPPrefix(IPPrefix):
             return None
         if attrs.get("description"):
             _prefix.description = attrs["description"]
-        if attrs.get("subnet_size"):
-            _prefix.prefix_length = attrs["subnet_size"]
         if attrs.get("nnn_id"):
             try:
                 _prefix._custom_field_data["solidserver_addr_id"] = \

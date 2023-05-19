@@ -31,7 +31,7 @@ def get_version():
     Returns:
         str: version with build
     """
-    version_dir = pathlib.Path(__file__).parent
+    version_dir = pathlib.Path(__file__).parent.parent
     try:
         with (version_dir / "_version.py").open("r") as version_file:
             lines = version_file.readlines()

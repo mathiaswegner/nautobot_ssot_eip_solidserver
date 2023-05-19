@@ -64,8 +64,8 @@ class SolidserverDataSource(DataSource, Job):
         self.address_filter = None
         self.client = None
         self.diffsync_flags = DiffSyncFlags.CONTINUE_ON_FAILURE \
-            | DiffSyncFlags.LOG_UNCHANGED_RECORDS \
-            | DiffSyncFlags.SKIP_UNMATCHED_DST
+            | DiffSyncFlags.LOG_UNCHANGED_RECORDS
+        # | DiffSyncFlags.SKIP_UNMATCHED_DST
 
     @classmethod
     def data_mappings(cls):
