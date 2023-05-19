@@ -15,7 +15,7 @@ class NautobotAdapter(DiffSync):
     address = NautobotIPAddress
     prefix = NautobotIPPrefix
 
-    top_level = ["address"]
+    top_level = ["address", "prefix"]
 
     def __init__(self, *args, job=None, sync=None, **kwargs):
         """Initialize the Nautobot DiffSync adapter."""

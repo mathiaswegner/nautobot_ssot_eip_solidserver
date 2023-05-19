@@ -216,9 +216,9 @@ class SolidserverDataSource(DataSource, Job):
             self.commit = True
             try:
                 self.source_adapter.sync_to(self.target_adapter)
+                self.log_success(message="Sync succeeded.")
             except ObjectNotCreated as create_err:
                 self.log_failure(f"Unable to create object {create_err}")
-            self.log_success(message="Sync complete.")
 
 
 jobs = [SolidserverDataSource]

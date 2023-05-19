@@ -16,8 +16,7 @@ class SSoTEIPSolidServerConfig(NautobotAppConfig):
     required_settings = []
     default_settings = {
         "nnn_user": "nautobot_nnn",
-        "nnn_url": "https://nnn.upenn.edu",
-        "nnn_credential": "/opt/nautobot/bazaar/nautobot_nnn"
+        "nnn_url": "https://nnn.upenn.edu"
     }
 
 

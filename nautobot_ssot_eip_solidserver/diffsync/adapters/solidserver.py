@@ -15,7 +15,7 @@ class SolidserverAdapter(DiffSync):
     address = SolidserverIPAddress
     prefix = SolidserverIPPrefix
 
-    top_level = ["address"]
+    top_level = ["address", "prefix"]
 
     def __init__(self, *args, job=None, conn: ssutils.SolidServerAPI,
                  sync=None, **kwargs):
