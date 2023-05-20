@@ -1,11 +1,12 @@
 """CRUD Nautobot objects from DiffSync models via ORM
 """
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from nautobot.extras.models import Status as OrmStatus
 from nautobot.ipam.models import IPAddress as OrmIPAddress
 from nautobot.ipam.models import Prefix as OrmPrefix
 from nautobot_ssot_eip_solidserver.diffsync.models.base import IPAddress, \
      IPPrefix
+from diffsync.exceptions import ObjectNotCreated
 
 
 class NautobotIPAddress(IPAddress):
@@ -23,7 +24,12 @@ class NautobotIPAddress(IPAddress):
         )
         new_address._custom_field_data = {
             "solidserver_addr_id": str(attrs.get("nnn_id", -1))}
-        new_address.validated_save()
+        try:
+            new_address.validated_save()
+        except (ValidationError, ObjectNotCreated) as valid_err:
+            diffsync.job.log_warning(
+                f"Failed to create {ids['address']}, {valid_err}")
+            return None
         return super().create(ids=ids, diffsync=diffsync, attrs=attrs)
 
     def update(self, attrs):
@@ -74,8 +80,8 @@ class NautobotIPAddress(IPAddress):
             _address.status = OrmStatus.objects.get(name="Unknown")
         try:
             _address.validated_save()
-        except Exception as catchall:
-            message = f"Failed to update {host_addr}: {catchall}"
+        except (ValidationError, ObjectNotCreated) as update_err:
+            message = f"Failed to update {host_addr}: {update_err}"
             self.diffsync.job.log_warning(message)
             return
         return super().update(attrs)
@@ -121,7 +127,13 @@ class NautobotIPPrefix(IPPrefix):
         )
         new_prefix._custom_field_data = {
             "solidserver_addr_id": str(attrs.get("nnn_id", "-1"))}
-        new_prefix.validated_save()
+        try:
+            new_prefix.validated_save()
+        except (ValidationError, ObjectNotCreated) as create_err:
+            diffsync.job.log_warning(
+                f"Failed to create {ids['prefix']}/{ids['subnet_size']}, "
+                + f"{create_err}")
+            return None
         return super().create(ids=ids, diffsync=diffsync, attrs=attrs)
 
     def update(self, attrs):
@@ -153,9 +165,10 @@ class NautobotIPPrefix(IPPrefix):
             _prefix.status = OrmStatus.objects.get(name="Unknown")
         try:
             _prefix.validated_save()
-        except Exception as catchall:
-            message = f"Failed to update {self.prefix}: {catchall}"
-            self.diffsync.job.log_warning(message)
+        except (ValidationError, ObjectNotCreated) as update_err:
+            self.diffsync.job.log_warning(
+                f"Failed to update prefix {self.prefix}/{self.subnet_size}, "
+                + f"{update_err}")
             return None
         return super().update(attrs)
 
