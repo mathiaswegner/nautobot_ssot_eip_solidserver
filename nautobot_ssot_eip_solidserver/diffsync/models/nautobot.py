@@ -138,11 +138,32 @@ class NautobotIPPrefix(IPPrefix):
             diffsync.job.log_warning(
                 f"prefix {ids['prefix']} failed to get subnet6_prefix")
             return None
-        new_prefix = OrmPrefix(
-            prefix=ids['prefix'], prefix_length=ids['subnet_size'],
-            description=attrs.get("description", ""),
-            status=status
-        )
+        try:
+            new_prefix = OrmPrefix(
+                prefix=f"{ids['prefix']}/{ids['subnnet_size']}",
+                network=ids['prefix'],
+                prefix_length=ids['subnet_size'],
+                description=attrs.get("description", ""),
+                status=status
+            )
+            diffsync.job.log_debug("mode one worked")
+        except Exception:
+            try:
+                new_prefix = OrmPrefix(
+                    prefix=f"{ids['prefix']}/{ids['subnnet_size']}",
+                    prefix_length=ids['subnet_size'],
+                    description=attrs.get("description", ""),
+                    status=status
+                )
+                diffsync.job.log_debug("mode two worked")
+            except Exception:
+                new_prefix = OrmPrefix(
+                    network=ids['prefix'],
+                    prefix_length=ids['subnet_size'],
+                    description=attrs.get("description", ""),
+                    status=status
+                )
+                diffsync.job.log_debug("mode three worked")
         new_prefix._custom_field_data = {
             "solidserver_addr_id": str(attrs.get("nnn_id", "-1"))}
         try:
