@@ -140,7 +140,8 @@ class NautobotIPPrefix(IPPrefix):
         """Update a nautobot IP address from this model"""
         self.diffsync.job.log_info(f"Updating prefix {self.prefix}")
         try:
-            _prefix = OrmPrefix.objects.get(network=self.prefix)
+            _prefix = OrmPrefix.objects.get(network=self.prefix,
+                                            prefix_length=self.subnet_size)
         except (AttributeError, OrmPrefix.DoesNotExist) as err:
             message = f"Failed to update prefix with attrs {attrs}, {err}"
             self.diffsync.job.log_warning(message)
