@@ -119,6 +119,18 @@ class NautobotIPPrefix(IPPrefix):
         # if attrs["status"]:
         #     status = OrmStatus.objects.get(name=attrs["status"])
         # else:
+        diffsync.job.log_info(
+            f"Creating prefix {ids['prefix']}/{ids['subnet_size']}")
+        diffsync.job.log_debug(
+            f"About to create prefix with ids {ids} and attrs {attrs}")
+        try:
+            obj = OrmPrefix.objects.get(prefix=ids["prefix"],
+                                        prefix_length=ids["subnet_size"])
+            diffsync.job.log_warning(
+                f"Tried to create prefix, but found {obj}")
+            return None
+        except ObjectDoesNotExist:
+            pass
         status = OrmStatus.objects.get(name="Imported From Solidserver")
         if ids['subnet_size'] == 128:
             diffsync.job.log_warning(f"prefix {ids['prefix']} has /128 mask")
