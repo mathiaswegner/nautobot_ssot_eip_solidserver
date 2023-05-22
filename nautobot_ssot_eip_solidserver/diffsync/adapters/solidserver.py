@@ -257,7 +257,7 @@ class SolidserverAdapter(DiffSync):
                     self.add(new_prefix)
                     self.job.log_debug(
                         f"added {new_prefix} with len "
-                        + f"{new_prefix.subnet_length}")
+                        + f"{new_prefix.subnet_size}")
                 except ObjectAlreadyExists as err:
                     self.job.log_warning(
                         f"_load_prefixes() Unable to load {new_prefix.prefix} "
