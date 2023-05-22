@@ -89,7 +89,8 @@ class NautobotAdapter(DiffSync):
             f"Processing {len(filtered_prefixes)} prefixes")
         for prefix in filtered_prefixes:
             try:
-                addr_id = int(prefix.custom_fields.solidserver_addr_id)
+                addr_id = int(
+                    prefix._custom_field_data.get("solidserver_addr_id"))
             except (AttributeError, TypeError):
                 addr_id = None
             new_prefix = self.prefix(
@@ -182,7 +183,8 @@ class NautobotAdapter(DiffSync):
                 f"Processing {len(OrmIPPrefix.objects.all())} prefixes")
             for prefix in OrmIPPrefix.objects.all():
                 try:
-                    addr_id = int(prefix.custom_fields.solidserver_addr_id)
+                    addr_id = int(
+                        prefix._custom_field_data.get("solidserver_addr_id"))
                 except (AttributeError, TypeError):
                     addr_id = None
                 new_prefix = self.prefix(

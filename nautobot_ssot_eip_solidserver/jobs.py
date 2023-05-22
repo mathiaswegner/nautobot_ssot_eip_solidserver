@@ -98,7 +98,7 @@ class SolidserverDataSource(DataSource, Job):
                 obj = IPAddress.objects.get(host=unique_id)
             elif model_name == "prefix":
                 prefix, prefixlen = unique_id.split("__")
-                obj = Prefix.objects.get(prefix=prefix,
+                obj = Prefix.objects.get(network=prefix,
                                          prefix_length=prefixlen)
         except ObjectDoesNotExist:
             pass
