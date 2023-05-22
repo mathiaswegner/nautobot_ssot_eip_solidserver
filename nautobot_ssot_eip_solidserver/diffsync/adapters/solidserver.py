@@ -261,7 +261,7 @@ class SolidserverAdapter(DiffSync):
                 except ObjectAlreadyExists as err:
                     self.job.log_warning(
                         f"_load_prefixes() Unable to load {new_prefix.prefix} "
-                        + f"/{new_prefix.subnet_length}. {err}")
+                        + f"/{new_prefix.subnet_size}. {err}")
                     self.job.log_debug(f"prefix: {each_prefix}")
 
     def load(self, addrs=True, prefixes=True, address_filter=None,
