@@ -120,6 +120,12 @@ class NautobotIPPrefix(IPPrefix):
         #     status = OrmStatus.objects.get(name=attrs["status"])
         # else:
         status = OrmStatus.objects.get(name="Imported From Solidserver")
+        if ids['subnet_size'] == 128:
+            diffsync.job.log_warning(f"prefix {ids['prefix']} has /128 mask")
+        elif ids['subnet_size'] == 129:
+            diffsync.job.log_warning(
+                f"prefix {ids['prefix']} failed to get subnet6_prefix")
+            return None
         new_prefix = OrmPrefix(
             prefix=ids['prefix'], prefix_length=ids['subnet_size'],
             description=attrs.get("description", ""),

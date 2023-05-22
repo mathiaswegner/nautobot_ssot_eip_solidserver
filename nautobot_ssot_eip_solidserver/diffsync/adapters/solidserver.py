@@ -103,12 +103,9 @@ class SolidserverAdapter(DiffSync):
         Returns:
             SolidserverPrefix: the diffsync model
         """
-        try:
-            subnet_size = str(bin(int(
-                each_prefix.get('subnet_size')))).lstrip('0b')
-            cidr_size = 32 - subnet_size.count('0')
-        except (ValueError, KeyError):
-            cidr_size = 32
+        subnet_size = str(bin(int(
+            each_prefix.get('subnet_size', '0')))).lstrip('0b')
+        cidr_size = 32 - subnet_size.count('0')
         try:
             descr = ssutils.unpack_class_params(
                 each_prefix['ip_class_parameters']).get('__eip_description')
@@ -133,10 +130,6 @@ class SolidserverAdapter(DiffSync):
             SolidserverPrefix: the diffsync model
         """
         try:
-            cidr_size = each_prefix.get('subnet6_prefix')
-        except (ValueError, KeyError):
-            cidr_size = 128
-        try:
             descr = ssutils.unpack_class_params(
                 each_prefix['ip6_class_parameters']).get('__eip_description')
         except (ValueError, KeyError):
@@ -146,7 +139,7 @@ class SolidserverAdapter(DiffSync):
             prefix=each_prefix.get('start_hostaddr'),
             # status=status,
             nnn_id=int(each_prefix.get('subnet6_id')),
-            subnet_size=cidr_size
+            subnet_size=int(each_prefix.get('subnet6_prefix', 129))
         )
         return new_prefix
 
@@ -262,11 +255,14 @@ class SolidserverAdapter(DiffSync):
                     new_prefix = self._process_ipv6_prefix(each_prefix)
                 try:
                     self.add(new_prefix)
+                    self.job.log_debug(
+                        f"added {new_prefix} with len "
+                        + f"{new_prefix.subnet_length}")
                 except ObjectAlreadyExists as err:
                     self.job.log_warning(
                         f"_load_prefixes() Unable to load {new_prefix.prefix} "
-                        + f"as appears to be a duplicate. {err}")
-                    self.job.log_debug(f"prefix: {new_prefix.__dict__}")
+                        + f"/{new_prefix.subnet_length}. {err}")
+                    self.job.log_debug(f"prefix: {each_prefix}")
 
     def load(self, addrs=True, prefixes=True, address_filter=None,
              domain_filter=None):
