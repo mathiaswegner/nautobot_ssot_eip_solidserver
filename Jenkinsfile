@@ -1,0 +1,64 @@
+#!groovy
+@Library('defaultlibrary')_
+
+pipeline {
+    agent none
+    stages {
+        stage('build the image') {
+            agent {
+                label 'fargate-python3'
+            }
+            stages {
+                stage ('clean up workspace') {
+                    steps {
+                        sh '''
+                        ls -la
+                        rm -f ./*.tar.gz
+                        rm -f ./*.whl
+                        rm -rf ~/.aws/credentials
+                        '''
+                    }
+                }
+                stage ('build dev') {
+                    when {
+                        branch 'develop'
+                    }
+                    steps {
+                        sh '''
+                        python3 -m build
+                        mv pypirc ~/.pypirc
+                        '''
+                        withCredentials([usernamePassword(credentialsId:'nautobot-plugins-write', passwordVariable: 'GITLAB_KEY', usernameVariable: 'GITLAB_USER')]){
+                            sh '''
+                            echo "username = ${GITLAB_USER}" >> ~/.pypirc
+                            echo "password = ${GITLAB_KEY}" >> ~/.pypirc
+                            python3 -m twine upload --repository gitlab-nautobot-plugins dist/*
+                            rm ~/.pypirc
+                            '''
+                        }
+                    }
+                }
+                stage ('build prod') {
+                    when {
+                        branch 'production'
+                    }
+                    steps {
+                        sh '''
+                        pip3 install -y twine
+                        python3 -m build
+                        mv pypirc ~/.pypirc
+                        '''
+                        withCredentials([usernamePassword(credentialsId:'nautobot-plugins-write', passwordVariable: 'GITLAB_KEY', usernameVariable: 'GITLAB_USER')]){
+                            sh '''
+                            echo "username = ${GITLAB_USER}" >> ~/.pypirc
+                            echo "password = ${GITLAB_KEY}" >> ~/.pypirc
+                            python3 -m twine upload --repository gitlab-nautobot-plugins dist/*
+                            rm ~/.pypirc
+                            '''
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
