@@ -6,7 +6,7 @@ pipeline {
     stages {
         stage('build the image') {
             agent {
-                label 'fargate-python3'
+                label 'tarraform-python3.9'
             }
             stages {
                 stage ('clean up workspace') {
