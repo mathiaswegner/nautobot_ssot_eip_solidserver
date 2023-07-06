@@ -3,4 +3,4 @@ index-servers =
     gitlab-nautobot-plugins
 
 [gitlab-nautobot-plugins]
-repository = https://gitlab.com/api/v4/projects/upenn-isc-pine%2Fnautobot-plugin-packages/packages/pypi
+repository = https://gitlab.com/api/v4/projects/isc-penn%2Ftse%2Fsourceoftruth%2Fnautobot-plugin-packages/packages/pypi

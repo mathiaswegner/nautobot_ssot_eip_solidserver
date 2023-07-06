@@ -6,7 +6,7 @@ pipeline {
     stages {
         stage('build the image') {
             agent {
-                label 'tarraform-python3.9'
+                label 'dockerbuilder-py39'
             }
             stages {
                 stage ('clean up workspace') {
@@ -25,8 +25,9 @@ pipeline {
                     }
                     steps {
                         sh '''
+                        pip3 install build twine
                         python3 -m build
-                        mv pypirc ~/.pypirc
+                        mv pypirc.txt ~/.pypirc
                         '''
                         withCredentials([usernamePassword(credentialsId:'nautobot-plugins-write', passwordVariable: 'GITLAB_KEY', usernameVariable: 'GITLAB_USER')]){
                             sh '''
@@ -44,9 +45,9 @@ pipeline {
                     }
                     steps {
                         sh '''
-                        pip3 install -y twine
+                        pip3 install build twine
                         python3 -m build
-                        mv pypirc ~/.pypirc
+                        mv pypirc.txt ~/.pypirc
                         '''
                         withCredentials([usernamePassword(credentialsId:'nautobot-plugins-write', passwordVariable: 'GITLAB_KEY', usernameVariable: 'GITLAB_USER')]){
                             sh '''
