@@ -25,7 +25,6 @@ pipeline {
                     }
                     steps {
                         sh '''
-                        pip3 install build twine
                         python3 -m build
                         mv pypirc.txt ~/.pypirc
                         '''
@@ -45,7 +44,6 @@ pipeline {
                     }
                     steps {
                         sh '''
-                        pip3 install build twine
                         python3 -m build
                         mv pypirc.txt ~/.pypirc
                         '''
