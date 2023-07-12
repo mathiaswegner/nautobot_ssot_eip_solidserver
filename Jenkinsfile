@@ -15,6 +15,7 @@ pipeline {
                         ls -la
                         rm -f ./*.tar.gz
                         rm -f ./*.whl
+                        rm -f ./dist/*
                         rm -rf ~/.aws/credentials
                         '''
                     }
