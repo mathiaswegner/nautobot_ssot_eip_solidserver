@@ -1,7 +1,7 @@
 """Stub model for loading nautobot data back to solidserver.
 """
-from nautobot_ssot_eip_solidserver.diffsync.models.base import IPAddress, \
-    IPPrefix
+from nautobot_ssot_eip_solidserver.diffsync.models.base import (IPAddress,
+                                                                IPPrefix)
 
 
 class SolidserverIPAddress(IPAddress):

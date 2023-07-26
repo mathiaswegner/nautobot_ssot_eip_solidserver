@@ -12,6 +12,7 @@ import logging
 import pathlib
 import sys
 import urllib.parse
+
 import certifi
 import netaddr
 import requests

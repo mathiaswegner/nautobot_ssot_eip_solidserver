@@ -1,9 +1,10 @@
 """Adapter to collect IP addresses and prefixes from Solidserver
 and creates DiffSync models
 """
-from nautobot_ssot_eip_solidserver.diffsync.models.solidserver import \
-    SolidserverIPAddress, SolidserverIPPrefix
+from nautobot_ssot_eip_solidserver.diffsync.models.solidserver import (
+    SolidserverIPAddress, SolidserverIPPrefix)
 from nautobot_ssot_eip_solidserver.utils import ssutils
+
 from diffsync import DiffSync
 from diffsync.exceptions import ObjectAlreadyExists
 

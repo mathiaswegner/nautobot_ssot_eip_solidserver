@@ -24,14 +24,6 @@ name = "SSoT EIP Solidserver"
 class SolidserverDataSource(DataSource, Job):
     """Solidserver SSoT Data Source."""
 
-    username = StringVar(required=False, label='Username',
-                         default=PLUGINS_CONFIG.get("nnn_user"))
-    password = StringVar(required=False, label='Password',
-                         default=PLUGINS_CONFIG.get("nnn_credential"))
-    solidserver_url = StringVar(
-        required=True,
-        default=PLUGINS_CONFIG.get("nnn_url"),
-        label='SolidServer URL')
     domain_name_filter = StringVar(
         required=False, default='',
         label='Optional domain name filter',
@@ -168,9 +160,9 @@ class SolidserverDataSource(DataSource, Job):
         self.log_debug(f"Name filter {self.kwargs.get('domain_name_filter')}")
         self.log_debug(message='Creating Solidserver connection')
         self.client = ssutils.SolidServerAPI(
-            username=self.kwargs.get('username'),
-            password=self.kwargs.get('password'),
-            base_url=self.kwargs.get('solidserver_url'),
+            username=PLUGINS_CONFIG.get("nnn_user"),
+            password=PLUGINS_CONFIG.get("nnn_credential"),
+            base_url=PLUGINS_CONFIG.get("nnn_url"),
             debug=self.kwargs.get('debug'),
             timeout=self.kwargs.get('solidserver_timeout'))
 

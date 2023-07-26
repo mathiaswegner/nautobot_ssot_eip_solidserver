@@ -3,8 +3,9 @@
 import netaddr
 from nautobot.ipam.models import IPAddress as OrmIPAddress
 from nautobot.ipam.models import Prefix as OrmIPPrefix
-from nautobot_ssot_eip_solidserver.diffsync.models.nautobot import \
-    NautobotIPAddress, NautobotIPPrefix
+from nautobot_ssot_eip_solidserver.diffsync.models.nautobot import (
+    NautobotIPAddress, NautobotIPPrefix)
+
 from diffsync import DiffSync
 from diffsync.exceptions import ObjectAlreadyExists
 

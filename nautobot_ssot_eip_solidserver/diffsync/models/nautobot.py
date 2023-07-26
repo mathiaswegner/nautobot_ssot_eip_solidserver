@@ -4,8 +4,9 @@ from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from nautobot.extras.models import Status as OrmStatus
 from nautobot.ipam.models import IPAddress as OrmIPAddress
 from nautobot.ipam.models import Prefix as OrmPrefix
-from nautobot_ssot_eip_solidserver.diffsync.models.base import IPAddress, \
-     IPPrefix
+from nautobot_ssot_eip_solidserver.diffsync.models.base import (IPAddress,
+                                                                IPPrefix)
+
 from diffsync.exceptions import ObjectNotCreated
 
 
