@@ -9,9 +9,9 @@ Raises:
 import base64
 import json
 import logging
-import pathlib
 import sys
 import urllib.parse
+from importlib.metadata import PackageNotFoundError, version
 
 import certifi
 import netaddr
@@ -32,16 +32,11 @@ def get_version():
     Returns:
         str: version with build
     """
-    version_dir = pathlib.Path(__file__).parent.parent
     try:
-        with (version_dir / "_version.py").open("r") as version_file:
-            lines = version_file.readlines()
-            for line in lines:
-                if "__version__" in line:
-                    return line.split(" ")[-1].rstrip("'").strip("\n' ")
-            return "Build unknown"
-    except FileNotFoundError:
-        return "Build unknown"
+        return version("package-name")
+    except PackageNotFoundError:
+        # package is not installed
+        return "Unknown"
 
 
 def enable_ss_debug():

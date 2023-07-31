@@ -9,7 +9,7 @@ class SSoTEIPSolidServerConfig(NautobotAppConfig):
     verbose_name = 'SSoT EIP Solidserver'
     description = \
         'SSoT plugin to synchronize data between Solidserver and Nautobot'
-    version = '0.0.5'
+    version = get_version()
     build = get_version()
     author = 'Mathias Wegner'
     author_email = 'mwegner@isc.upenn.edu'
