@@ -1,5 +1,6 @@
 """Stub model for loading nautobot data back to solidserver.
 """
+# pylint: disable=import-error
 from nautobot_ssot_eip_solidserver.diffsync.models.base import (IPAddress,
                                                                 IPPrefix)
 

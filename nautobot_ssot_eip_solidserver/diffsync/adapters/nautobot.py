@@ -89,6 +89,11 @@ class NautobotAdapter(DiffSync):
         self.job.log_debug(
             f"Processing {len(filtered_prefixes)} prefixes")
         for prefix in filtered_prefixes:
+            if not prefix._custom_field_data.get("solidserver_addr_id"):
+                self.job.log_warning(
+                    f"Prefix {prefix.prefix} has no solidserver_addr_id,"
+                    + " skipping!")
+                continue
             try:
                 addr_id = int(
                     prefix._custom_field_data.get("solidserver_addr_id"))
@@ -98,7 +103,6 @@ class NautobotAdapter(DiffSync):
                 prefix=str(prefix.network),
                 subnet_size=prefix.prefix_length,
                 description=prefix.description,
-                # status=prefix.status.name,
                 nnn_id=addr_id
             )
             try:
