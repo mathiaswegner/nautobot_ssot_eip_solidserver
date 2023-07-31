@@ -33,7 +33,7 @@ def get_version():
         str: version with build
     """
     try:
-        return version("package-name")
+        return version("nautobot-ssot-eip-solidserver")
     except PackageNotFoundError:
         # package is not installed
         return "Unknown"
