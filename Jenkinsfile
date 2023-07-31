@@ -25,6 +25,11 @@ pipeline {
                         branch 'develop'
                     }
                     steps {
+                        withCredentials([usernamePassword(credentialsId:'isc-penn-tse-services-deploy-key', passwordVariable: 'GITLAB_KEY', usernameVariable: 'GITLAB_USER')]){
+                            sh '''
+                            git pull --tags https://${GITLAB_USER}:${GITLAB_KEY}@gitlab.com/isc-penn/tse/services/sourceoftruth/nautobot_ssot_eip_solidserver.git
+                            '''
+                        }
                         sh '''
                         python3 -m build
                         mv pypirc.txt ~/.pypirc
@@ -44,6 +49,11 @@ pipeline {
                         branch 'production'
                     }
                     steps {
+                        withCredentials([usernamePassword(credentialsId:'isc-penn-tse-services-deploy-key', passwordVariable: 'GITLAB_KEY', usernameVariable: 'GITLAB_USER')]){
+                            sh '''
+                            git pull --tags https://${GITLAB_USER}:${GITLAB_KEY}@gitlab.com/isc-penn/tse/services/sourceoftruth/nautobot_ssot_eip_solidserver.git
+                            '''
+                        }
                         sh '''
                         python3 -m build
                         mv pypirc.txt ~/.pypirc
