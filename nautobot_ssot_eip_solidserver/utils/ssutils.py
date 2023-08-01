@@ -11,7 +11,6 @@ import json
 import logging
 import sys
 import urllib.parse
-from importlib.metadata import PackageNotFoundError, version
 
 import certifi
 import netaddr
@@ -24,19 +23,6 @@ DOMAINS = ('.router.private.upenn.edu', '.dccs.private.upenn.edu',
            '.dccs.upenn.edu', '.net.isc.upenn.edu')
 LIMIT = 1000
 LOGGER = logging.Logger('ssot.solidserver')
-
-
-def get_version():
-    """get the version with build number
-
-    Returns:
-        str: version with build
-    """
-    try:
-        return version("nautobot-ssot-eip-solidserver")
-    except PackageNotFoundError:
-        # package is not installed
-        return "Unknown"
 
 
 def enable_ss_debug():

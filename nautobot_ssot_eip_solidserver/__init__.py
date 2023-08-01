@@ -1,6 +1,19 @@
 """Application config"""
+from importlib.metadata import PackageNotFoundError, version
 from nautobot.apps import NautobotAppConfig
-from nautobot_ssot_eip_solidserver.utils.ssutils import get_version
+
+
+def get_version():
+    """get the version with build number
+
+    Returns:
+        str: version with build
+    """
+    try:
+        return version("nautobot-ssot-eip-solidserver")
+    except PackageNotFoundError:
+        # package is not installed
+        return "Unknown"
 
 
 class SSoTEIPSolidServerConfig(NautobotAppConfig):
