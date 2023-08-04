@@ -6,7 +6,7 @@ pipeline {
     stages {
         stage('build the image') {
             agent {
-                label 'dockerbuilder-py39'
+                label 'python311'
             }
             stages {
                 stage ('clean up workspace') {
