@@ -1,0 +1,24 @@
+CNAC code 910 (ISC: Information Systems and Computing)
+
+ORG codes [9145, 9142, 9131, 9166, 9104, 9181,
+9171, 9162, 9146, 9182, 9143, 9161, 9147, TESE, 9125, 9183]
+
+Only limits to about 2/3 of IP4, so not that useful
+
+{'limit': 100, 'TAGS': 'ip.upenn_org_code', 'WHERE': "tag_ip_upenn_org_code='9145' or tag_ip_upenn_org_code='9142' or tag_ip_upenn_org_code='9131' or tag_ip_upenn_org_code='9166' or tag_ip_upenn_org_code='9104' or tag_ip_upenn_org_code='9181' or tag_ip_upenn_org_code='9171' or tag_ip_upenn_org_code='9162' or tag_ip_upenn_org_code='9146' or tag_ip_upenn_org_code='9182' or tag_ip_upenn_org_code='9143' or tag_ip_upenn_org_code='9161' or tag_ip_upenn_org_code='9147' or tag_ip_upenn_org_code='9125' or tag_ip_upenn_org_code='9183'"}
+
+
+
+Does NOT work for RR date/time searches
+params["WHERE"] = "tag_rr_upenn_modified_datetime like '2023-08-%'"
+
+'WHERE': "tag_rr_upenn_modified_datetime>='2023-08-05%2000%3A00%3A00%20UTC'"
+
+"WHERE": "rr_last_update_time>0"
+
+"WHERE": "rr_last_update_time<>''"
+
+RRs
+
+>>> r[0].keys()
+dict_keys(['errno', 'rr_all_value', 'dnszone_sort_zone', 'dnszone_is_rpz', 'dnszone_type', 'rr_full_name', 'rr_full_name_utf', 'rr_name_ip_addr', 'rr_name_ip4_addr', 'rr_value_ip_addr', 'rr_value_ip4_addr', 'rr_glue', 'rr_type', 'ttl', 'delayed_time', 'rr_class_name', 'value1', 'value2', 'value3', 'value4', 'value5', 'value6', 'value7', 'dnszone_id', 'rr_id', 'dns_id', 'dnszone_name_utf', 'dnszone_name', 'dns_name', 'dns_type', 'dns_cloud', 'vdns_parent_id', 'dnsview_name', 'dnsview_class_name', 'dnsview_id', 'dnszone_site_name', 'dnszone_is_reverse', 'dnszone_masters', 'vdns_parent_name', 'dnszone_forwarders', 'dns_class_name', 'dnszone_class_name', 'dns_version', 'dns_comment', 'delayed_create_time', 'delayed_delete_time', 'multistatus', 'rr_auth_gsstsig', 'rr_last_update_time', 'rr_last_update_days', 'rr_name_id', 'rr_value_id', 'rr_type_id', 'rr_glue_id', 'dnsview_class_parameters', 'dnsview_class_parameters_properties', 'dnsview_class_parameters_inheritance_source', 'rr_class_parameters', 'rr_class_parameters_properties', 'rr_class_parameters_inheritance_source'])
