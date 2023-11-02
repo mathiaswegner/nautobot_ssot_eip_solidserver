@@ -16,7 +16,7 @@ class NautobotIPAddress(IPAddress):
     @classmethod
     def create(cls, diffsync, ids, attrs):
         """Create a nautobot IP address from this model"""
-        status = OrmStatus.objects.get(name="Imported From Solidserver")
+        status = OrmStatus.objects.get(name__isw="active")
         new_address = OrmIPAddress(
             host=ids["address"], prefix_length=attrs["subnet_size"],
             dns_name=attrs["dns_name"],
@@ -46,7 +46,7 @@ class NautobotIPAddress(IPAddress):
         try:
             _address = OrmIPAddress.objects.get(host=host_addr)
         except (AttributeError, OrmIPAddress.DoesNotExist) as err:
-            message = f"Failed to update with attrs {attrs}, {err}"
+            message = f"Failed to retrieve {host_addr}, {err}"
             self.diffsync.job.log_warning(message)
             return
         if attrs.get("dns_name"):
@@ -76,13 +76,17 @@ class NautobotIPAddress(IPAddress):
                     "Setting nnn_id to -1 after exception dns_name = ''"
                 )
                 _address._custom_field_data = {"solidserver_addr_id": "-1"}
-            _address.status = OrmStatus.objects.get(name="NO-IPAM-RECORD")
+            no_record = OrmStatus.objects.get(name="NO-IPAM-RECORD")
+            self.diffsync.job.log_debug("Got status %s", no_record)
+            _address.status = no_record
         else:
-            _address.status = OrmStatus.objects.get(name="Unknown")
+            unknown = OrmStatus.objects.get(name__isw="Unknown")
+            self.diffsync.job.log_debug("Got status %s", unknown)
+            _address.status = unknown
         try:
             _address.validated_save()
         except (ValidationError, ObjectNotCreated) as update_err:
-            message = f"Failed to update {host_addr}: {update_err}"
+            message = f"Failed to save update to {host_addr}: {update_err}"
             self.diffsync.job.log_warning(message)
             return
         return super().update(attrs)
@@ -130,7 +134,7 @@ class NautobotIPPrefix(IPPrefix):
             return None
         except ObjectDoesNotExist:
             pass
-        status = OrmStatus.objects.get(name="Imported From Solidserver")
+        status = OrmStatus.objects.get(name__isw="Active")
         if ids['subnet_size'] == 128:
             diffsync.job.log_warning(f"prefix {ids['prefix']} has /128 mask")
         elif ids['subnet_size'] == 129:
@@ -179,9 +183,13 @@ class NautobotIPPrefix(IPPrefix):
             except (AttributeError, KeyError):
                 _prefix._custom_field_data = {
                     "solidserver_addr_id": str(attrs.get("nnn_id", "-1"))}
-            _prefix.status = OrmStatus.objects.get(name="NO-IPAM-RECORD")
+            no_record = OrmStatus.objects.get(name="NO-IPAM-RECORD")
+            self.diffsync.job.log_debug("Got status %s", no_record)
+            _prefix.status = no_record
         else:
-            _prefix.status = OrmStatus.objects.get(name="Unknown")
+            unknown = OrmStatus.objects.get(name__isw="Unknown")
+            self.diffsync.job.log_debug("Got status %s", unknown)
+            _prefix.status = unknown
         try:
             _prefix.validated_save()
         except (ValidationError, ObjectNotCreated) as update_err:
