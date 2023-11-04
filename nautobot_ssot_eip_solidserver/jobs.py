@@ -47,6 +47,7 @@ class SolidserverDataSource(DataSource, Job):
         data_source = "Solidserver"
         description = "Sync information from Solidserver to Nautobot"
         commit_default = True
+        has_sensitive_variables = False
         # field_order = []
 
     def __init__(self):
