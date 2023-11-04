@@ -16,7 +16,7 @@ class NautobotIPAddress(IPAddress):
     @classmethod
     def create(cls, diffsync, ids, attrs):
         """Create a nautobot IP address from this model"""
-        status = OrmStatus.objects.get(name="Active")
+        status = OrmStatus.objects.get(name="Imported From Solidserver")
         new_address = OrmIPAddress(
             host=ids["address"], prefix_length=attrs["subnet_size"],
             dns_name=attrs["dns_name"],
@@ -134,7 +134,7 @@ class NautobotIPPrefix(IPPrefix):
             return None
         except ObjectDoesNotExist:
             pass
-        status = OrmStatus.objects.get(name="Active")
+        status = OrmStatus.objects.get(name="Imported From Solidserver")
         if ids['subnet_size'] == 128:
             diffsync.job.log_warning(f"prefix {ids['prefix']} has /128 mask")
         elif ids['subnet_size'] == 129:
