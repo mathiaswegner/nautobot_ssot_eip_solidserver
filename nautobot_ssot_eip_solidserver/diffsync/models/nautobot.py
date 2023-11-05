@@ -77,11 +77,11 @@ class NautobotIPAddress(IPAddress):
                 )
                 _address._custom_field_data = {"solidserver_addr_id": "-1"}
             no_record = OrmStatus.objects.get(name="NO-IPAM-RECORD")
-            self.diffsync.job.log_debug("Got status %s", no_record)
+            self.diffsync.job.log_debug(f"Got status {no_record}")
             _address.status = no_record
         else:
             unknown = OrmStatus.objects.get(name="Unknown")
-            self.diffsync.job.log_debug("Got status %s", unknown)
+            self.diffsync.job.log_debug(f"Got status {unknown}")
             _address.status = unknown
         try:
             _address.validated_save()
@@ -184,11 +184,11 @@ class NautobotIPPrefix(IPPrefix):
                 _prefix._custom_field_data = {
                     "solidserver_addr_id": str(attrs.get("nnn_id", "-1"))}
             no_record = OrmStatus.objects.get(name="NO-IPAM-RECORD")
-            self.diffsync.job.log_debug("Got status %s", no_record)
+            self.diffsync.job.log_debug(f"Got status {no_record}")
             _prefix.status = no_record
         else:
             unknown = OrmStatus.objects.get(name="Unknown")
-            self.diffsync.job.log_debug("Got status %s", unknown)
+            self.diffsync.job.log_debug(f"Got status {unknown}")
             _prefix.status = unknown
         try:
             _prefix.validated_save()
