@@ -1,6 +1,20 @@
 # Release Notes
 
-## 0.1.0 (pending)
+## 0.1.3
+
+    - fixed bad log formatting
+    - improved logging
+
+## 0.1.2
+
+    - fixed issue where version would report as unknown
+    - switched to docker build agent instead of ec2 build agent
+
+## 0.1.1
+
+    - updated jenkinsfile to pull tags
+
+## 0.1.0
 
     - moved username and password from job UI to env vars
     - added data mapping, config information, and object lookups to job
