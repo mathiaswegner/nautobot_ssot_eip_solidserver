@@ -1,30 +1,30 @@
-[build-system]
-requires = ["setuptools ~= 65.0.0", "cython ~= 0.29.0",
-  "setuptools_scm[toml]>=7.1.0" ]
-build-backend = "setuptools.build_meta"
-
-[project]
+[tool.poetry]
 name = "nautobot-plugin-ssot-eip-solidserver"
-# version = "0.0.5"
-dynamic = ["version"]
+version = "1.0.0"
 keywords = ["nautobot", "plugin", "solidserver"]
-authors = [
-  { name="Mathias Wegner", email="mwegner@isc.upenn.edu" },
-]
+authors = ["Mathias Wegner <mwegner@isc.upenn.edu>"]
 description = "Nautobot SSoT plugin for EIP Solidserver"
 readme = "README.md"
-requires-python = ">=3.7"
 classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
 ]
-dependencies = [
-  "validators~=0.20.0"
-]
+packages = [{include = "nautobot_plugin_ssot_eip_solidserver"}]
 
-[project.urls]
-# "Homepage" = ""
-# "Bug Tracker" = ""
 
-[tool.setuptools_scm]
-write_to = "nautobot_ssot_eip_solidserver/_version.py"
+[tool.poetry.dependencies]
+python = ">=3.9,<3.12"
+validators = ">=0.20.0"
+nautobot = ">=1.6,<2.0"
+nautobot_ssot = ">=1.6.0,<2.0"
+types-requests = "^2.31.0.20240106"
+
+[build-system]
+requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning"]
+build-backend = "poetry_dynamic_versioning.backend"
+
+[tool.poetry-dynamic-versioning]
+enable = true
+
+[tool.poetry-dynamic-versioning.substitution]
+files = ["nautobot_ssot_eip_solidserver1/__init__.py", "pyproject.toml", "*.py"]

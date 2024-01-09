@@ -1,27 +1,39 @@
 # nautobot-plugin-ssot-eip-solidserver
 
-This is a plugin for the Nautobot SSoT plugin to pull selected data from EIP solidserver and merge it into Nautobot.
+This is a plugin for the Nautobot SSoT plugin to pull selected data from EIP solidserver and merge it into Nautobot as IP Address and IP Prefix objects.
 
-## Configuration
+In addition to synchronizing the data, it adds the ID of the solidserver object to a nautobot custom field named solidserver addr id w/slug solidserver_addr_id.
 
-There is no configuration in the nautobot_config.py, all options are added via the GUI when running a job.
+It expects four statuses to be available - NO-IPAM-RECORD, Imported From Solidserver, Active, and Unknown.
 
 ## Installation
 
-Add plugin and dependencies to the nautobot container's requirements.txt, rebuild the container and restart the service.  To pin a specific version rather than using the latest, the Jenkinsfile will need to be updated to download the pinned version that matches the requirements.
+Build the plugin
+    ```poetry build```
 
-## Dependencies
+Install the plugin
+    ```pip install nautobot-plugin-ssot-eip-solidserver```
 
-validators~=0.20.0
+Update nautobot_config.py
+    *see configuration section*
 
-## Manually Building
+Restart nautobot
 
-```bash
-export GITLAB_KEY=<gitlab token>
-python3 -m build
-./push_to_gitlab_registry.sh
+## Configuration
+
+The following should be added to your nautobot_config.py and updated for your environment.  Ideally, the nnn_credential object is a secret injected at runtime and not hardcoded into your config, eg environment variable in a container.
+
+``` python
+    'nautobot_ssot_eip_solidserver': {
+        "nnn_user": os.getenv("NAUTOBOT_SSOT_NNN_USER",
+                              "SolidServer_Nautobot_User"),
+        "nnn_url": os.getenv("NAUTOBOT_SSOT_NNN_URL",
+                             "https://solidserverinstance.example.com"),
+        "nnn_credential": os.getenv("NAUTOBOT_SSOT_NNN_CREDENTIAL",
+                                    "SUPER SECRET PASSWORD!")
+    },
 ```
 
-## Building with Jenkins
-
-Pending
+- nnn_user is expected to be a string containing a username.
+- nnn_url is expected to be a string containing a url.
+- nnn_credential is expected to be a string containing a password.
