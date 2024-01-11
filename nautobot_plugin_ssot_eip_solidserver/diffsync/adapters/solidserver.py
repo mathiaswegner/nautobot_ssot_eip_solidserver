@@ -1,34 +1,53 @@
 """Adapter to collect IP addresses and prefixes from Solidserver
 and creates DiffSync models
 """
-from nautobot_ssot_eip_solidserver.diffsync.models.solidserver import (
+from typing import Any
+
+import netaddr  # type: ignore
+from diffsync import DiffSync
+from diffsync.exceptions import ObjectAlreadyExists
+from nautobot.extras.jobs import Job  # type: ignore
+from nautobot_ssot.models import Sync  # type: ignore
+
+from nautobot_plugin_ssot_eip_solidserver.constants import IPV4_SUBNET_SIZE_MAP
+from nautobot_plugin_ssot_eip_solidserver.diffsync.models.solidserver import (
     SolidserverIPAddress,
     SolidserverIPPrefix,
 )
-from nautobot_ssot_eip_solidserver.utils import ssutils
-
-from diffsync import DiffSync
-from diffsync.exceptions import ObjectAlreadyExists
+from nautobot_plugin_ssot_eip_solidserver.utils import ssapi, ssutils
 
 
 class SolidserverAdapter(DiffSync):
     """DiffSync adapter for Solidserver"""
 
-    address = SolidserverIPAddress
+    ipaddress = SolidserverIPAddress
     prefix = SolidserverIPPrefix
 
     top_level = ["address", "prefix"]
 
     def __init__(
-        self, *args, job=None, conn: ssutils.SolidServerAPI, sync=None, **kwargs
-    ):
+        self, *args, job: Job, conn: ssapi.SolidServerAPI, sync: Sync, **kwargs
+    ) -> None:
         """Initialize the Solidserver DiffSync adapter."""
         super().__init__(*args, **kwargs)
-        self.job = job
-        self.conn = conn
-        self.sync = sync
+        self.job: Job = job
+        self.conn: ssapi.SolidServerAPI = conn
+        self.sync: Sync = sync
 
-    def _process_ipv4_addr(self, each_addr):
+    def _add_object_to_diffsync(self, obj: Any) -> None:
+        try:
+            self.add(obj)
+            self.job.log_debug(f"Added {obj}")
+        except ObjectAlreadyExists as err:
+            if isinstance(obj, SolidserverIPAddress):
+                self.job.log_warning(f"Skipping duplicate {obj.host}. {err}")
+            elif isinstance(obj, SolidserverIPPrefix):
+                self.job.log_warning(
+                    f"Skipping duplicate {obj.network} "
+                    + f"/{obj.prefix_length}. {err}"
+                )
+
+    def _process_ipv4_addr(self, each_addr: dict[str, str]) -> int | None:
         """Convert one Solidserver IP4 record into a diffsync model
 
         Args:
@@ -38,10 +57,11 @@ class SolidserverAdapter(DiffSync):
             SolidserverIPAddress: the diffsync model
         """
         try:
-            subnet_size = str(bin(int(each_addr.get("subnet_size")))).lstrip("0b")
-            cidr_size = 32 - subnet_size.count("0")
+            cidr_size: int = IPV4_SUBNET_SIZE_MAP.get(
+                int(each_addr.get("subnet_size", 1)), 32
+            )
         except (ValueError, KeyError):
-            cidr_size = None
+            cidr_size = 32
         try:
             descr = ssutils.unpack_class_params(each_addr["ip_class_parameters"]).get(
                 "__eip_description"
@@ -52,19 +72,20 @@ class SolidserverAdapter(DiffSync):
             message = f"ip_class params: {each_addr['ip_class_parameters']}"
             self.job.log_debug(message=message)
             descr = ""
-        new_addr = self.address(
+        new_addr = self.ipaddress(
             dns_name=each_addr.get("name"),
             description=descr,
-            address=each_addr.get("hostaddr"),
-            # status=status,
-            nnn_id=int(each_addr.get("ip_id")),
-            subnet_size=cidr_size,
+            host=netaddr.IPAddress(each_addr.get("hostaddr")),
+            solidserver_addr_id=each_addr.get("ip_id", "not found"),
+            mask_length=cidr_size,
         )
-        if not new_addr.nnn_id and not new_addr.dns_name:
-            return None, None
-        return new_addr, each_addr.get("subnet_id", -1)
+        if new_addr:
+            self._add_object_to_diffsync(new_addr)
+        if new_addr and new_addr.mask_length:
+            return new_addr.mask_length
+        return None
 
-    def _process_ipv6_addr(self, each_addr):
+    def _process_ipv6_addr(self, each_addr: dict[str, str]) -> int | None:
         """Convert one Solidserver IP6 record into a diffsync model
 
         Args:
@@ -74,9 +95,9 @@ class SolidserverAdapter(DiffSync):
             SolidserverIPAddress: the diffsync model
         """
         try:
-            cidr_size = each_addr.get("subnet6_prefix")
+            cidr_size: int = int(each_addr.get("subnet6_prefix", 128))
         except (ValueError, KeyError):
-            cidr_size = None
+            cidr_size = 128
         try:
             descr = ssutils.unpack_class_params(each_addr["ip6_class_parameters"]).get(
                 "__eip_description"
@@ -86,18 +107,20 @@ class SolidserverAdapter(DiffSync):
         except AttributeError:
             self.job.log_debug(f"ip_class params: {each_addr['ip6_class_parameters']}")
             descr = ""
-        new_addr = self.address(
+        new_addr = self.ipaddress(
             dns_name=each_addr.get("ip6_name", ""),
             description=descr,
-            address=each_addr.get("hostaddr"),
-            nnn_id=int(each_addr.get("ip6_id")),
-            subnet_size=cidr_size,
+            host=netaddr.IPAddress(each_addr.get("hostaddr")),
+            solidserver_addr_id=each_addr.get("ip6_id", "not found"),
+            mask_length=cidr_size,
         )
-        if not new_addr.nnn_id and not new_addr.dns_name:
-            return None, None
-        return new_addr, each_addr.get("subnet6_id", -1)
+        if new_addr:
+            self._add_object_to_diffsync(new_addr)
+        if new_addr and new_addr.mask_length:
+            return new_addr.mask_length
+        return None
 
-    def _process_ipv4_prefix(self, each_prefix):
+    def _process_ipv4_prefix(self, each_prefix: dict[str, str]) -> None:
         """Convert one Solidserver IP4 record into a diffsync model
 
         Args:
@@ -116,14 +139,16 @@ class SolidserverAdapter(DiffSync):
             descr = ""
         new_prefix = self.prefix(
             description=descr,
-            prefix=each_prefix.get("start_hostaddr"),
-            # status=status,
-            nnn_id=int(each_prefix.get("subnet_id")),
-            subnet_size=cidr_size,
+            network=netaddr.IPNetwork(
+                f"{each_prefix.get('start_hostaddr')}/{cidr_size}"
+            ),
+            solidserver_addr_id=each_prefix.get("subnet_id", "not found"),
+            prefix_length=cidr_size,
         )
-        return new_prefix
+        if new_prefix:
+            self._add_object_to_diffsync(new_prefix)
 
-    def _process_ipv6_prefix(self, each_prefix):
+    def _process_ipv6_prefix(self, each_prefix: dict[str, str]) -> None:
         """Convert one Solidserver IP6 record into a diffsync model
 
         Args:
@@ -140,12 +165,14 @@ class SolidserverAdapter(DiffSync):
             descr = ""
         new_prefix = self.prefix(
             description=descr,
-            prefix=each_prefix.get("start_hostaddr"),
-            # status=status,
-            nnn_id=int(each_prefix.get("subnet6_id")),
-            subnet_size=int(each_prefix.get("subnet6_prefix", 129)),
+            network=netaddr.IPNetwork(
+                f"{each_prefix.get('start_hostaddr')}/{each_prefix.get('subnet6_prefix', 128)}"
+            ),
+            solidserver_addr_id=each_prefix.get("subnet6_id", "not found"),
+            prefix_length=int(each_prefix.get("subnet6_prefix", 128)),
         )
-        return new_prefix
+        if new_prefix:
+            self._add_object_to_diffsync(new_prefix)
 
     def _load_addresses(self, address_filter=None, domain_filter=None):
         """Run the api queries against Solidserver, using filters if given,
@@ -166,7 +193,7 @@ class SolidserverAdapter(DiffSync):
         if address_filter:
             message = f"Starting to filter addresses with {address_filter}"
             self.job.log_debug(message=message)
-            filter_addrs = ssutils.get_addresses_by_network(self.conn, address_filter)
+            filter_addrs = self.conn.get_addresses_by_network(address_filter)
             message = f"Got {len(filter_addrs)} back"
             self.job.log_debug(message=message)
             if filter_addrs:
@@ -176,7 +203,7 @@ class SolidserverAdapter(DiffSync):
         if domain_filter:
             message = f"Starting to filter addresses with {domain_filter}"
             self.job.log_debug(message=message)
-            filter_names = ssutils.get_addresses_by_name(self.conn, domain_filter)
+            filter_names = self.conn.get_addresses_by_name(domain_filter)
             message = f"Got {len(filter_names)} back"
             self.job.log_debug(message=message)
             if filter_names:
@@ -186,29 +213,21 @@ class SolidserverAdapter(DiffSync):
         if not address_filter and not domain_filter:
             message = "Starting to gather unfiltered addresses"
             self.job.log_debug(message=message)
-            all_addrs = ssutils.get_all_addresses(self.conn)
+            all_addrs = self.conn.get_all_addresses()
             message = f"no filter {len(all_addrs)}"
             self.job.log_debug(message=message)
 
         for each_addr in all_addrs:
             if each_addr.get("hostaddr"):
+                subnet_id = None
                 if each_addr.get("ip_id"):
                     # ipv4
-                    new_addr, subnet_id = self._process_ipv4_addr(each_addr)
+                    subnet_id = self._process_ipv4_addr(each_addr)
                 elif each_addr.get("ip6_id"):
                     # ipv6
-                    new_addr, subnet_id = self._process_ipv6_addr(each_addr)
-                if not new_addr:
-                    continue
-                if subnet_id not in prefix_ids:
+                    subnet_id = self._process_ipv6_addr(each_addr)
+                if subnet_id and subnet_id not in prefix_ids:
                     prefix_ids.append(subnet_id)
-                try:
-                    self.add(new_addr)
-                except ObjectAlreadyExists as err:
-                    self.job.log_warning(
-                        f"_load_addresses() Unable to load {new_addr.address}"
-                        + f" as appears to be a duplicate. {err}"
-                    )
         return prefix_ids
 
     def _load_prefixes(self, address_filter=None, subnet_list=None):
@@ -224,20 +243,20 @@ class SolidserverAdapter(DiffSync):
         """
         all_prefixes = []
         if address_filter:
-            filter_prefixes = ssutils.get_prefixes_by_network(self.conn, address_filter)
+            filter_prefixes = self.conn.get_prefixes_by_network(address_filter)
             if filter_prefixes:
                 all_prefixes.extend(filter_prefixes)
                 message = f"address_filter {len(filter_prefixes)} prefixes"
                 self.job.log_debug(message=message)
         if subnet_list:
             self.job.log_debug(message=f"Subnet list {len(subnet_list)}")
-            filter_name_prefixes = ssutils.get_prefixes_by_id(self.conn, subnet_list)
+            filter_name_prefixes = self.conn.get_prefixes_by_id(subnet_list)
             if filter_name_prefixes:
                 all_prefixes.extend(filter_name_prefixes)
                 message = f"name_filter {len(filter_name_prefixes)} prefixes"
                 self.job.log_debug(message=message)
         if not address_filter and not subnet_list:
-            all_prefixes = ssutils.get_all_prefixes(self.conn)
+            all_prefixes = self.conn.get_all_prefixes()
             message = f"No filter total {len(all_prefixes)} prefixes"
             self.job.log_debug(message=message)
 
@@ -250,18 +269,10 @@ class SolidserverAdapter(DiffSync):
             if each_prefix.get("is_terminal"):
                 if each_prefix.get("subnet_id"):
                     # ipv4
-                    new_prefix = self._process_ipv4_prefix(each_prefix)
+                    self._process_ipv4_prefix(each_prefix)
                 elif each_prefix.get("subnet6_id"):
                     # ipv6
-                    new_prefix = self._process_ipv6_prefix(each_prefix)
-                try:
-                    self.add(new_prefix)
-                except ObjectAlreadyExists as err:
-                    self.job.log_warning(
-                        f"_load_prefixes() Unable to load {new_prefix.prefix} "
-                        + f"/{new_prefix.subnet_size}. {err}"
-                    )
-                    self.job.log_debug(f"prefix: {each_prefix}")
+                    self._process_ipv6_prefix(each_prefix)
 
     def load(self, addrs=True, prefixes=True, address_filter=None, domain_filter=None):
         """Load data sets and return the populated DiffSync adapter

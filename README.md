@@ -19,6 +19,10 @@ Update nautobot_config.py
 
 Restart nautobot
 
+## Constants
+
+The constants file includes a default value for the SolidSERVER host and for the query limit size.  Override them if needed.  The host value should only get used if something has gone wrong loading the configuration.
+
 ## Configuration
 
 The following should be added to your nautobot_config.py and updated for your environment.  Ideally, the nnn_credential object is a secret injected at runtime and not hardcoded into your config, eg environment variable in a container.

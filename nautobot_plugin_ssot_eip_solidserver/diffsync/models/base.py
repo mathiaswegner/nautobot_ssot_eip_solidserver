@@ -3,20 +3,22 @@
 from typing import Annotated, Optional
 
 import netaddr  # type: ignore
-from nautobot_ssot.contrib import CustomFieldAnnotation, NautobotModel
+from django.db.models.base import ModelBase  # type: ignore
+from nautobot.ipam.models import IPAddress, Prefix  # type: ignore
+from nautobot_ssot.contrib import CustomFieldAnnotation, NautobotModel  # type: ignore
 
 
-class IPAddress(NautobotModel):
+class SSoTIPAddress(NautobotModel):
     """IP address model for solidserver ssot plugin"""
 
-    _modelname = "host"
+    _model: ModelBase = IPAddress
+    _modelname = "ipaddress"
     _identifiers = ("host",)
     _attributes = (
         "dns_name",
         "solidserver_addr_id",
         "mask_length",
         "description",
-        "ip_version",
     )
     dns_name: Optional[str]
     description: Optional[str]
@@ -25,15 +27,18 @@ class IPAddress(NautobotModel):
         str, CustomFieldAnnotation(name="solidserver address id")
     ]
     mask_length: int
-    ip_version: int
 
 
-class IPPrefix(NautobotModel):
+class SSoTIPPrefix(NautobotModel):
     """IP prefix model for solidserver ssot plugin"""
 
+    _model: ModelBase = Prefix
     _modelname = "network"
     _identifiers = ("network", "prefix_length")
-    _attributes = ("description", "solidserver_addr_id", "ip_version")
+    _attributes = (
+        "description",
+        "solidserver_addr_id",
+    )
 
     description: Optional[str]
     network: netaddr.IPNetwork
@@ -41,4 +46,3 @@ class IPPrefix(NautobotModel):
         str, CustomFieldAnnotation(name="solidserver address id")
     ]
     prefix_length: int
-    ip_version: int

@@ -7,8 +7,10 @@ from diffsync import DiffSync
 from typing_extensions import Self
 
 from nautobot_plugin_ssot_eip_solidserver.diffsync.models.base import (
-    IPAddress,
-    IPPrefix,
+    SSoTIPAddress as IPAddress,
+)
+from nautobot_plugin_ssot_eip_solidserver.diffsync.models.base import (
+    SSoTIPPrefix as IPPrefix,
 )
 
 

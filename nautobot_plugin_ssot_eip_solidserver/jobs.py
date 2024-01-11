@@ -17,7 +17,8 @@ from nautobot.extras.jobs import (  # type: ignore
 )
 from nautobot.ipam.models import IPAddress, Prefix  # type: ignore
 from nautobot_ssot.jobs.base import DataMapping, DataSource  # type: ignore
-from netaddr import AddrFormatError
+from nautobot_ssot.models import Sync  # type: ignore
+from netaddr import AddrFormatError  # type: ignore
 
 from nautobot_plugin_ssot_eip_solidserver import SSoTEIPSolidServerConfig
 from nautobot_plugin_ssot_eip_solidserver.diffsync.adapters import nautobot, solidserver
@@ -31,13 +32,13 @@ name = "SSoT EIP Solidserver"  # pylint: disable=invalid-name
 class SolidserverDataSource(DataSource, Job):
     """Solidserver SSoT Data Source."""
 
-    domain_name_filter = StringVar(
+    name_filter_from_ui = StringVar(
         required=False,
         default="",
         label="Optional domain name filter",
         description="Comma separated list of domains, only used for addresses",
     )
-    address_filter = IPNetworkVar(
+    address_filter_from_ui = IPNetworkVar(
         required=False,
         label="Optional network filter",
         description="Limit sync to a CIDR",
@@ -66,10 +67,10 @@ class SolidserverDataSource(DataSource, Job):
 
     def __init__(self) -> None:
         super().__init__()
-        self.commit = True
-        self.domain_filter: list[str] | None = None
-        self.address_filter = None
-        self.client: SolidServerAPI | None = None
+        self.commit: bool = True
+        self.domain_filter: list[str] = []
+        self.client: SolidServerAPI
+        self.sync: Sync
         self.diffsync_flags = (
             DiffSyncFlags.CONTINUE_ON_FAILURE
             | DiffSyncFlags.LOG_UNCHANGED_RECORDS
@@ -127,7 +128,7 @@ class SolidserverDataSource(DataSource, Job):
         self.source_adapter.load(
             addrs=get_addrs,
             prefixes=get_prefixes,
-            address_filter=self.kwargs.get("address_filter"),
+            address_filter=self.kwargs.get("address_filter_from_ui"),
             domain_filter=self.domain_filter,
         )
 
@@ -137,12 +138,12 @@ class SolidserverDataSource(DataSource, Job):
         """Method to instantiate and load the TARGET adapter into
         `self.target_adapter`."""
         self.log_debug(message="Creating Nautobot adapter")
-        self.target_adapter = nautobot.NautobotAdapter(job=self, sync=self.sync)
+        self.target_adapter = nautobot.SSoTNautobotAdapter(job=self, sync=self.sync)
         self.log_debug(message="Starting to run nautobot .load()")
         self.target_adapter.load(
             addrs=get_addrs,
             prefixes=get_prefixes,
-            address_filter=self.kwargs.get("address_filter"),
+            address_filter=self.kwargs.get("address_filter_from_ui"),
             domain_filter=self.domain_filter,
         )
 
@@ -155,15 +156,15 @@ class SolidserverDataSource(DataSource, Job):
             self.log_debug(f"commit {self.commit}")
         except AttributeError:
             self.log_debug("attr error trying to get self.commit")
-        if self.kwargs.get("address_filter"):
+        if self.kwargs.get("address_filter_from_ui"):
             try:
-                netaddr.IPNetwork(self.kwargs.get("address_filter", ""))
+                netaddr.IPNetwork(self.kwargs.get("address_filter_from_ui", ""))
             except (AddrFormatError, KeyError, AttributeError) as addr_err:
                 self.log_failure(message="Address filter is not a CIDR")
                 raise ValueError("Address filter is not a CIDR") from addr_err
-        if self.kwargs.get("domain_name_filter"):
+        if self.kwargs.get("name_filter_from_ui"):
             self.domain_filter, errors = ssutils.domain_name_prep(
-                self.kwargs.get("domain_name_filter", "")
+                self.kwargs.get("name_filter_from_ui", "")
             )
             if errors:
                 for each_err in errors:
@@ -173,8 +174,8 @@ class SolidserverDataSource(DataSource, Job):
             self.log_debug(message=message)
         self.log_debug(f"Fetch addresses {self.kwargs.get('fetch_addresses')}")
         self.log_debug(f"Fetch prefixes {self.kwargs.get('fetch_prefixes')}")
-        self.log_debug(f"CIDR filter {self.kwargs.get('address_filter')}")
-        self.log_debug(f"Name filter {self.kwargs.get('domain_name_filter')}")
+        self.log_debug(f"CIDR filter {self.kwargs.get('address_filter_from_ui')}")
+        self.log_debug(f"Name filter {self.domain_filter}")
         self.log_debug(message="Creating Solidserver connection")
         self.client = SolidServerAPI(
             job=self,

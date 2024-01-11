@@ -1,19 +1,24 @@
 """CRUD Nautobot objects from DiffSync models via ORM
 """
-from typing import Any, Mapping
+from typing import Any, Mapping, Union
 
-from diffsync import DiffSync
 from diffsync.exceptions import ObjectNotCreated
 from django.core.exceptions import ObjectDoesNotExist, ValidationError  # type: ignore
+from nautobot.extras.jobs import Job  # type: ignore
 from nautobot.extras.models import Status as OrmStatus  # type: ignore
 from nautobot.ipam.models import IPAddress as OrmIPAddress  # type: ignore
 from nautobot.ipam.models import Prefix as OrmPrefix
+from nautobot_ssot.jobs.base import DataSource  # type: ignore
 from typing_extensions import Self
 
 from nautobot_plugin_ssot_eip_solidserver.diffsync.models.base import (
-    IPAddress,
-    IPPrefix,
+    SSoTIPAddress as IPAddress,
 )
+from nautobot_plugin_ssot_eip_solidserver.diffsync.models.base import (
+    SSoTIPPrefix as IPPrefix,
+)
+
+SsotDiffSync = Union[Job, DataSource]
 
 
 class NautobotIPAddress(IPAddress):
@@ -21,7 +26,7 @@ class NautobotIPAddress(IPAddress):
 
     @classmethod
     def create(
-        cls, diffsync: DiffSync, ids: Mapping[Any, Any], attrs: Mapping[Any, Any]
+        cls, diffsync: SsotDiffSync, ids: Mapping[Any, Any], attrs: Mapping[Any, Any]
     ) -> Self | None:
         """Create a nautobot IP address from this model"""
         status = OrmStatus.objects.get(name="Imported From Solidserver")
@@ -123,7 +128,7 @@ class NautobotIPPrefix(IPPrefix):
 
     @classmethod
     def create(
-        cls, diffsync: DiffSync, ids: Mapping[Any, Any], attrs: Mapping[Any, Any]
+        cls, diffsync: SsotDiffSync, ids: Mapping[Any, Any], attrs: Mapping[Any, Any]
     ) -> Self | None:
         """Create a nautobot IP prefix from this model"""
         diffsync.job.log_info(
