@@ -153,6 +153,10 @@ class SolidserverDataSource(DataSource, Job):
         operation and, if commit, sync operation
         """
         try:
+            self.log_debug(
+                "version"
+                f" {SSoTEIPSolidServerConfig.version} ({SSoTEIPSolidServerConfig.build})"
+            )
             self.log_debug(f"commit {self.commit}")
         except AttributeError:
             self.log_debug("attr error trying to get self.commit")
