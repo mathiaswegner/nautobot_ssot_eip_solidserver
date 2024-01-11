@@ -17,7 +17,7 @@ class SSoTIPAddress(NautobotModel):
     _attributes = (
         "dns_name",
         "solidserver_addr_id",
-        "mask_length",
+        "prefix_length",
         "description",
     )
     dns_name: Optional[str]
