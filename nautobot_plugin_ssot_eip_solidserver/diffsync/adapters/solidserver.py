@@ -77,12 +77,12 @@ class SolidserverAdapter(DiffSync):
             description=descr,
             host=netaddr.IPAddress(each_addr.get("hostaddr")),
             solidserver_addr_id=each_addr.get("ip_id", "not found"),
-            mask_length=cidr_size,
+            prefix_length=cidr_size,
         )
         if new_addr:
             self._add_object_to_diffsync(new_addr)
-        if new_addr and new_addr.mask_length:
-            return new_addr.mask_length
+        if new_addr and new_addr.prefix_length:
+            return new_addr.prefix_length
         return None
 
     def _process_ipv6_addr(self, each_addr: dict[str, str]) -> int | None:
@@ -112,12 +112,12 @@ class SolidserverAdapter(DiffSync):
             description=descr,
             host=netaddr.IPAddress(each_addr.get("hostaddr")),
             solidserver_addr_id=each_addr.get("ip6_id", "not found"),
-            mask_length=cidr_size,
+            prefix_length=cidr_size,
         )
         if new_addr:
             self._add_object_to_diffsync(new_addr)
-        if new_addr and new_addr.mask_length:
-            return new_addr.mask_length
+        if new_addr and new_addr.prefix_length:
+            return new_addr.prefix_length
         return None
 
     def _process_ipv4_prefix(self, each_prefix: dict[str, str]) -> None:
