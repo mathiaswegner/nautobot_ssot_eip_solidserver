@@ -25,7 +25,7 @@ from nautobot_plugin_ssot_eip_solidserver.diffsync.adapters import nautobot, sol
 from nautobot_plugin_ssot_eip_solidserver.utils import ssutils
 from nautobot_plugin_ssot_eip_solidserver.utils.ssapi import SolidServerAPI
 
-PLUGINS_CONFIG = settings.PLUGINS_CONFIG["nautobot_ssot_eip_solidserver"]
+PLUGINS_CONFIG = settings.PLUGINS_CONFIG["nautobot_plugin_ssot_eip_solidserver"]
 name = "SSoT EIP Solidserver"  # pylint: disable=invalid-name
 
 
