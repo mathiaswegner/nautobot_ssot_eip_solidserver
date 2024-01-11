@@ -59,7 +59,7 @@ class SolidserverDataSource(DataSource, Job):
     class Meta:
         """Metadata about job"""
 
-        name = "Update Nautobot from Solidserver"
+        name = "Update Nautobot from EIP SolidSERVER"
         data_source = "Solidserver"
         description = "Sync information from Solidserver to Nautobot"
         commit_default = True
