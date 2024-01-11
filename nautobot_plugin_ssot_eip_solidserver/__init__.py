@@ -21,7 +21,7 @@ def get_version():
 class SSoTEIPSolidServerConfig(NautobotAppConfig):
     """Application config"""
 
-    name = "nautobot_ssot_eip_solidserver"
+    name = "nautobot_plugin_ssot_eip_solidserver"
     verbose_name = "SSoT EIP Solidserver"
     description = "SSoT plugin to synchronize data between Solidserver and Nautobot"
     version = get_version()
