@@ -26,7 +26,7 @@ class SSoTIPAddress(NautobotModel):
     solidserver_addr_id: Annotated[
         str, CustomFieldAnnotation(name="solidserver address id")
     ]
-    mask_length: int
+    prefix_length: int
 
 
 class SSoTIPPrefix(NautobotModel):

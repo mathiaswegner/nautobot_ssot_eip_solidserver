@@ -62,8 +62,8 @@ class NautobotIPAddress(IPAddress):
             return None
         if attrs.get("dns_name"):
             _address.dns_name = attrs["dns_name"]
-        if attrs.get("mask_length"):
-            _address.mask_length = attrs.get("mask_length")
+        if attrs.get("prefix_length"):
+            _address.prefix_length = int(attrs.get("prefix_length"))
         if attrs.get("description"):
             _address.description = attrs["description"]
         if attrs.get("solidserver_addr_id"):

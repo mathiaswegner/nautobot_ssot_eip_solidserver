@@ -34,25 +34,12 @@ class SSoTNautobotAdapter(NautobotAdapter):
             addr_id: str = ipaddr._custom_field_data.get("solidserver_addr_id")
         except (AttributeError, TypeError, ValueError):
             addr_id = "-1"
-        try:
-            mask_length: int = ipaddr.mask_length
-        except AttributeError:
-            self.job.log_warning(f"Address {ipaddr.host} has no mask_length!")
-            self.job.log_warning(f"dict: {ipaddr.__dict__}")
-            self.job.log_warning(f"{ipaddr}")
-            try:
-                mask_length = int(str(ipaddr).split("/")[1])
-            except (AttributeError, IndexError):
-                self.job.log_warning(
-                    f"Unable to get mask_length for {ipaddr} with string bs"
-                )
-                mask_length = 32
         new_ip = self.ipaddress(
             host=netaddr.IPAddress(ipaddr.host),
             dns_name=ipaddr.dns_name,
             description=ipaddr.description,
             solidserver_addr_id=addr_id,
-            mask_length=mask_length,
+            prefix_length=ipaddr.prefix_length,
         )
         message = f"Loaded address {ipaddr.host}"
         self.job.log_debug(message=message)
