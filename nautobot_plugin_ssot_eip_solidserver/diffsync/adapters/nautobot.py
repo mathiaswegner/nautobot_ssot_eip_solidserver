@@ -21,7 +21,7 @@ class SSoTNautobotAdapter(NautobotAdapter):
     ipaddress = SSoTIPAddress
     prefix = SSoTIPPrefix
 
-    top_level = ["address", "prefix"]
+    top_level = ["ipaddress", "prefix"]
 
     def __init__(self, *args, job: Job, sync: Sync, **kwargs):
         """Initialize the Nautobot DiffSync adapter."""

@@ -23,7 +23,7 @@ class SolidserverAdapter(DiffSync):
     ipaddress = SolidserverIPAddress
     prefix = SolidserverIPPrefix
 
-    top_level = ["address", "prefix"]
+    top_level = ["ipaddress", "prefix"]
 
     def __init__(
         self, *args, job: Job, conn: ssapi.SolidServerAPI, sync: Sync, **kwargs
