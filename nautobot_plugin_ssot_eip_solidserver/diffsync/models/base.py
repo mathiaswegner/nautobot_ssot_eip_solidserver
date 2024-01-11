@@ -33,7 +33,7 @@ class SSoTIPPrefix(NautobotModel):
     """IP prefix model for solidserver ssot plugin"""
 
     _model: ModelBase = Prefix
-    _modelname = "network"
+    _modelname = "prefix"
     _identifiers = ("network", "prefix_length")
     _attributes = (
         "description",
