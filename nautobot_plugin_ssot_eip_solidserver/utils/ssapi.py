@@ -167,7 +167,8 @@ class SolidServerAPI:
         elif http_action == "get":
             self.job.log_debug(f"params {params}")
             self.job.log_debug(f"data {data}")
-            self.job.log_debug(f"headers {self.__headers}")
+            # be careful with this, this will log passwords!
+            # self.job.log_debug(f"headers {self.__headers}")
             self.job.log_debug(f"ssl verify {self.__sslverify}")
             response = self.session.get(
                 url,
