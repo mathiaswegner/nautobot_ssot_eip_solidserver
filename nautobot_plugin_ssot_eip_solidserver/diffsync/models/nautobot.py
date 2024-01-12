@@ -29,7 +29,17 @@ class NautobotIPAddress(IPAddress):
         cls, diffsync: SsotDiffSync, ids: Mapping[Any, Any], attrs: Mapping[Any, Any]
     ) -> Self | None:
         """Create a nautobot IP address from this model"""
+        diffsync.job.log_info(f"Creating address {ids['host']}")
+        try:
+            obj = OrmIPAddress.objects.get(host=ids["host"])
+            diffsync.job.log_warning(f"Tried to create address, but found {obj}")
+            return None
+        except ObjectDoesNotExist:
+            pass
         status = OrmStatus.objects.get(name="Imported From Solidserver")
+        if not status:
+            diffsync.job.log_warning("Failed to get status 'Imported From Solidserver'")
+            return None
         new_address = OrmIPAddress(
             host=ids["host"],
             prefix_length=attrs["prefix_length"],
