@@ -4,8 +4,21 @@ from typing import Annotated, Optional
 
 import netaddr  # type: ignore
 from django.db.models.base import ModelBase  # type: ignore
+from nautobot.extras.models import Status  # type: ignore
 from nautobot.ipam.models import IPAddress, Prefix  # type: ignore
 from nautobot_ssot.contrib import CustomFieldAnnotation, NautobotModel  # type: ignore
+
+
+class SSoTStatus(NautobotModel):
+    """Status model for solidserver ssot plugin"""
+
+    _model: ModelBase = Status
+    _modelname = "status"
+    _identifiers = ("name",)
+    _attributes = ("description", "color")
+    name: str = "Imported From Solidserver"
+    description: Optional[str]
+    color: Optional[str]
 
 
 class SSoTIPAddress(NautobotModel):
@@ -28,7 +41,11 @@ class SSoTIPAddress(NautobotModel):
         str, CustomFieldAnnotation(name="solidserver address id")
     ]
     prefix_length: int
-    status: str = "active"
+    status: SSoTStatus = SSoTStatus(
+        name="Imported From Solidserver",
+        color="purple",
+        description="This IP was imported from Solidserver",
+    )
 
 
 class SSoTIPPrefix(NautobotModel):
@@ -49,4 +66,8 @@ class SSoTIPPrefix(NautobotModel):
         str, CustomFieldAnnotation(name="solidserver address id")
     ]
     prefix_length: int
-    status: str = "active"
+    status: SSoTStatus = SSoTStatus(
+        name="Imported From Solidserver",
+        color="purple",
+        description="This IP was imported from Solidserver",
+    )
