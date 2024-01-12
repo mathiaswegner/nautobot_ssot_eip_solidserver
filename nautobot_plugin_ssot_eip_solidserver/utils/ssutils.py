@@ -30,7 +30,7 @@ def unpack_class_params(params):
     return dict(urllib.parse.parse_qsl(params, keep_blank_values=True))
 
 
-def iter_subnet_values_for_like_clause(cidr: netaddr.IPNetwork) -> list[str]:
+def iter_ip4_subnet_values_for_like_clause(cidr: netaddr.IPNetwork) -> list[str]:
     """Iterate through a CIDR, returning a list of CIDRs that are
     one bit shorter than the original CIDR
 
@@ -40,27 +40,44 @@ def iter_subnet_values_for_like_clause(cidr: netaddr.IPNetwork) -> list[str]:
     Returns:
         list: a list of CIDRs
     """
-    cidr_list = []
-    if cidr.version == 4:
-        if cidr.prefixlen <= 24:
-            # if the cidr is /24 or shorter, return the first the octets and trailing dot
-            cidr_string = str(cidr.ip)[: str(cidr.ip).rindex(".") + 1]
-            cidr_list.append(cidr_string)
-        else:
-            # if the cidr is longer than /24, iterate through the various combinations of
-            # first three octets and append them to cidr_list
-            for each_cidr in cidr.subnet(24):
-                subnet = str(each_cidr.ip)[: str(each_cidr.ip).rindex(".") + 1]
-                cidr_list.append(subnet)
-    elif cidr.version == 6:
-        if cidr.prefixlen <= 112:
-            cidr_sting = str(cidr.ip)[: str(cidr.ip).rindex(":") + 1]
-            cidr_list.append(cidr_sting)
-        else:
-            for each_cidr in cidr.subnet(112):
-                subnet = str(each_cidr.ip)[: str(each_cidr.ip).rindex(":") + 1]
-                cidr_list.append(subnet)
-    return cidr_list
+    search_list = []
+    if cidr.prefixlen >= 24:
+        # if the cidr is /24 or smaller, return a list with a single where statement
+        first_addr = str(hex(cidr.first)).lstrip("0x")
+        last_addr = str(hex(cidr.last)).lstrip("0x")
+        return [f"ip_addr > {first_addr} and ip_addr < {last_addr}"]
+    else:
+        # if the cidr is longer than /24, iterate through the various combinations of
+        # first three octets and append them to cidr_list
+        for each_cidr in cidr.subnet(24):
+            first_addr = str(hex(each_cidr.first)).lstrip("0x")
+            last_addr = str(hex(each_cidr.last)).lstrip("0x")
+            search_list.append(f"ip_addr > {first_addr} and ip_addr < {last_addr}")
+    return search_list
+
+
+def iter_ip6_subnet_values_for_like_clause(cidr: netaddr.IPNetwork) -> list[str]:
+    """Iterate through a CIDR, returning a list of where statements to find all
+    addresses within a given /112
+    If the cidr is smaller than /112, return a list with a single where statement
+
+    Args:
+        cidr (netaddr.IPNetwork): a CIDR
+
+    Returns:
+        list: a list of CIDRs
+    """
+    search_list = []
+    if cidr.prefixlen >= 112:
+        first_addr = str(hex(cidr.first)).lstrip("0x")
+        last_addr = str(hex(cidr.last)).lstrip("0x")
+        return [f"ip6_addr > {first_addr} and ip6_addr < {last_addr}"]
+    else:
+        for each_cidr in cidr.subnet(112):
+            first_addr = str(hex(each_cidr.first)).lstrip("0x")
+            last_addr = f"{first_addr[:-4]}ffff"
+            search_list.append(f"ip6_addr >= {first_addr} and ip6_addr <= {last_addr}")
+    return search_list
 
 
 def domain_name_prep(domain_filter: str) -> tuple[list, list]:
