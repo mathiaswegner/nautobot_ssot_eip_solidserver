@@ -2,7 +2,6 @@
 """
 from typing import Annotated, Optional
 
-import netaddr  # type: ignore
 from django.db.models.base import ModelBase  # type: ignore
 from nautobot.ipam.models import IPAddress, Prefix  # type: ignore
 from nautobot_ssot.contrib import CustomFieldAnnotation, NautobotModel  # type: ignore
@@ -23,7 +22,7 @@ class SSoTIPAddress(NautobotModel):
     )
     dns_name: Optional[str]
     description: Optional[str | None]
-    host: netaddr.IPAddress
+    host: str
     solidserver_addr_id: Annotated[
         str, CustomFieldAnnotation(name="solidserver address id")
     ] = "not found"
@@ -44,7 +43,7 @@ class SSoTIPPrefix(NautobotModel):
     )
 
     description: Optional[str | None]
-    network: netaddr.IPNetwork
+    network: str
     solidserver_addr_id: Annotated[
         str, CustomFieldAnnotation(name="solidserver address id")
     ] = "not found"

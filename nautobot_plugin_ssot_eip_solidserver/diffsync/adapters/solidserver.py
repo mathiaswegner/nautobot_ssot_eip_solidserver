@@ -3,7 +3,6 @@ and creates DiffSync models
 """
 from typing import Any
 
-import netaddr  # type: ignore
 from diffsync import DiffSync
 from diffsync.exceptions import ObjectAlreadyExists
 from nautobot.extras.jobs import Job  # type: ignore
@@ -77,7 +76,7 @@ class SolidserverAdapter(DiffSync):
         new_addr = self.ipaddress(
             dns_name=each_addr.get("name"),
             description=descr,
-            host=netaddr.IPAddress(each_addr.get("hostaddr")),
+            host=str(each_addr.get("hostaddr")),
             solidserver_addr_id=each_addr.get("ip_id", "not found"),
             prefix_length=cidr_size,
         )
@@ -120,7 +119,7 @@ class SolidserverAdapter(DiffSync):
         new_addr = self.ipaddress(
             dns_name=each_addr.get("ip6_name", ""),
             description=descr,
-            host=netaddr.IPAddress(each_addr.get("hostaddr")),
+            host=str(each_addr.get("hostaddr")),
             solidserver_addr_id=each_addr.get("ip6_id", "not found"),
             prefix_length=cidr_size,
         )
@@ -157,9 +156,7 @@ class SolidserverAdapter(DiffSync):
             descr = " "
         new_prefix = self.prefix(
             description=descr,
-            network=netaddr.IPNetwork(
-                f"{each_prefix.get('start_hostaddr')}/{cidr_size}"
-            ),
+            network=f"{each_prefix.get('start_hostaddr')}/{cidr_size}",
             solidserver_addr_id=each_prefix.get("subnet_id", "not found"),
             prefix_length=cidr_size,
         )
@@ -189,7 +186,7 @@ class SolidserverAdapter(DiffSync):
             descr = " "
         new_prefix = self.prefix(
             description=descr,
-            network=netaddr.IPNetwork(
+            network=(
                 f"{each_prefix.get('start_hostaddr')}/{each_prefix.get('subnet6_prefix', 128)}"
             ),
             solidserver_addr_id=each_prefix.get("subnet6_id", "not found"),

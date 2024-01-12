@@ -44,7 +44,7 @@ class SSoTNautobotAdapter(NautobotAdapter):
             self.job.log_warning(f"Address {ipaddr.host} has no solidserver_addr_id")
             addr_id = "not found"
         new_ip = self.ipaddress(
-            host=netaddr.IPAddress(ipaddr.host),
+            host=str(ipaddr.host),
             dns_name=ipaddr.dns_name,
             description=ipaddr.description,
             solidserver_addr_id=addr_id,
@@ -78,7 +78,7 @@ class SSoTNautobotAdapter(NautobotAdapter):
             self.job.log_warning(f"Address {prefix.network} has no solidserver_addr_id")
             addr_id = "not found"
         new_prefix = self.prefix(
-            network=netaddr.IPNetwork(f"{prefix.network}/{prefix.prefix_length}"),
+            network=f"{prefix.network}/{prefix.prefix_length}",
             prefix_length=prefix.prefix_length,
             description=prefix.description,
             solidserver_addr_id=addr_id,
