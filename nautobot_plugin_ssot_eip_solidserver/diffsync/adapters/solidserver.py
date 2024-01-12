@@ -156,7 +156,7 @@ class SolidserverAdapter(DiffSync):
             descr = " "
         new_prefix = self.prefix(
             description=descr,
-            network=f"{each_prefix.get('start_hostaddr')}/{cidr_size}",
+            network=str(each_prefix.get("start_hostaddr")),
             solidserver_addr_id=each_prefix.get("subnet_id", "not found"),
             prefix_length=cidr_size,
         )
@@ -186,9 +186,7 @@ class SolidserverAdapter(DiffSync):
             descr = " "
         new_prefix = self.prefix(
             description=descr,
-            network=(
-                f"{each_prefix.get('start_hostaddr')}/{each_prefix.get('subnet6_prefix', 128)}"
-            ),
+            network=str(each_prefix.get("start_hostaddr")),
             solidserver_addr_id=each_prefix.get("subnet6_id", "not found"),
             prefix_length=int(each_prefix.get("subnet6_prefix", 128)),
         )

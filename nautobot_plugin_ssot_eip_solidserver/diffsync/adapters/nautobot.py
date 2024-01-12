@@ -78,7 +78,7 @@ class SSoTNautobotAdapter(NautobotAdapter):
             self.job.log_warning(f"Address {prefix.network} has no solidserver_addr_id")
             addr_id = "not found"
         new_prefix = self.prefix(
-            network=f"{prefix.network}/{prefix.prefix_length}",
+            network=str(prefix.network),
             prefix_length=prefix.prefix_length,
             description=prefix.description,
             solidserver_addr_id=addr_id,
