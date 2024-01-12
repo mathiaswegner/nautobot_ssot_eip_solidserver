@@ -27,6 +27,7 @@ class SSoTIPAddress(NautobotModel):
         str, CustomFieldAnnotation(name="solidserver address id")
     ]
     prefix_length: int
+    status: str = "active"
 
 
 class SSoTIPPrefix(NautobotModel):
@@ -46,3 +47,4 @@ class SSoTIPPrefix(NautobotModel):
         str, CustomFieldAnnotation(name="solidserver address id")
     ]
     prefix_length: int
+    status: str = "active"
