@@ -40,6 +40,9 @@ class SSoTNautobotAdapter(NautobotAdapter):
             addr_id: str = ipaddr._custom_field_data.get("solidserver_addr_id")
         except (AttributeError, TypeError, ValueError):
             addr_id = "not found"
+        if not addr_id:
+            self.job.log_warning(f"Address {ipaddr.host} has no solidserver_addr_id")
+            addr_id = "not found"
         new_ip = self.ipaddress(
             host=netaddr.IPAddress(ipaddr.host),
             dns_name=ipaddr.dns_name,
@@ -69,6 +72,9 @@ class SSoTNautobotAdapter(NautobotAdapter):
         try:
             addr_id: str = prefix._custom_field_data.get("solidserver_addr_id")
         except (AttributeError, TypeError):
+            addr_id = "not found"
+        if not addr_id:
+            self.job.log_warning(f"Address {prefix.network} has no solidserver_addr_id")
             addr_id = "not found"
         new_prefix = self.prefix(
             network=netaddr.IPNetwork(f"{prefix.network}/{prefix.prefix_length}"),
