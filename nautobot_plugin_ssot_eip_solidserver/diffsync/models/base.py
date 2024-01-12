@@ -9,18 +9,6 @@ from nautobot.ipam.models import IPAddress, Prefix  # type: ignore
 from nautobot_ssot.contrib import CustomFieldAnnotation, NautobotModel  # type: ignore
 
 
-class SSoTStatus(NautobotModel):
-    """Status model for solidserver ssot plugin"""
-
-    _model: ModelBase = Status
-    _modelname = "status"
-    _identifiers = ("name",)
-    _attributes = ("description", "color")
-    name: str = "Imported From Solidserver"
-    description: Optional[str]
-    color: Optional[str]
-
-
 class SSoTIPAddress(NautobotModel):
     """IP address model for solidserver ssot plugin"""
 
@@ -41,7 +29,7 @@ class SSoTIPAddress(NautobotModel):
         str, CustomFieldAnnotation(name="solidserver address id")
     ]
     prefix_length: int
-    status: SSoTStatus = SSoTStatus(
+    status: Status = Status(
         name="Imported From Solidserver",
         color="purple",
         description="This IP was imported from Solidserver",
@@ -66,7 +54,7 @@ class SSoTIPPrefix(NautobotModel):
         str, CustomFieldAnnotation(name="solidserver address id")
     ]
     prefix_length: int
-    status: SSoTStatus = SSoTStatus(
+    status: Status = Status(
         name="Imported From Solidserver",
         color="purple",
         description="This IP was imported from Solidserver",
