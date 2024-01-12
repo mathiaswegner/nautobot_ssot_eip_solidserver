@@ -19,6 +19,7 @@ class SSoTIPAddress(NautobotModel):
         "solidserver_addr_id",
         "prefix_length",
         "description",
+        "status",
     )
     dns_name: Optional[str]
     description: Optional[str]
@@ -39,6 +40,7 @@ class SSoTIPPrefix(NautobotModel):
     _attributes = (
         "description",
         "solidserver_addr_id",
+        "status",
     )
 
     description: Optional[str]
