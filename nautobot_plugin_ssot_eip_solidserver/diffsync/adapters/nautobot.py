@@ -12,6 +12,7 @@ from netaddr import AddrFormatError
 from nautobot_plugin_ssot_eip_solidserver.diffsync.models.base import (
     SSoTIPAddress,
     SSoTIPPrefix,
+    SSoTStatus,
 )
 
 
@@ -20,8 +21,9 @@ class SSoTNautobotAdapter(NautobotAdapter):
 
     ipaddress = SSoTIPAddress
     prefix = SSoTIPPrefix
+    status = SSoTStatus
 
-    top_level = ["ipaddress", "prefix"]
+    top_level = ["status", "ipaddress", "prefix"]
 
     def __init__(self, *args, job: Job, sync: Sync, **kwargs):
         """Initialize the Nautobot DiffSync adapter."""
