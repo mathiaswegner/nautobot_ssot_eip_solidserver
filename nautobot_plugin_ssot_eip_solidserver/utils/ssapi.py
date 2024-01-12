@@ -398,6 +398,7 @@ class SolidServerAPI:
         ss_addrs = []
         self.job.log_debug("Starting get addresses by network")
         sub_cidrs: list[str] = ssutils.iter_subnet_values_for_like_clause(cidr)
+        self.job.log_debug(f"sub_cidrs is {sub_cidrs}")
         action = "unset"
         if cidr.version == 4:
             action = "ip_address_list"

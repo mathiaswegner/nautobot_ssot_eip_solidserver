@@ -84,7 +84,7 @@ class NautobotIPAddress(IPAddress):
                 " update in place"
             )
             _address._custom_field_data["solidserver_addr_id"] = str(
-                attrs.get("solidserver_addr_id", "-1")
+                attrs.get("solidserver_addr_id", "not found")
             )
         elif attrs.get("dns_name") == "":
             self.diffsync.job.log_debug(
@@ -178,7 +178,7 @@ class NautobotIPPrefix(IPPrefix):
             status=status,
         )
         new_prefix._custom_field_data = {
-            "solidserver_addr_id": str(attrs.get("solidserver_addr_id", "-1"))
+            "solidserver_addr_id": str(attrs.get("solidserver_addr_id", "not found"))
         }
         try:
             new_prefix.validated_save()
@@ -214,7 +214,7 @@ class NautobotIPPrefix(IPPrefix):
                 }
         elif attrs.get("description") == "":
             try:
-                _prefix._custom_field_data["solidserver_addr_id"] = "-1"
+                _prefix._custom_field_data["solidserver_addr_id"] = "not found"
             except (AttributeError, KeyError):
                 _prefix._custom_field_data = {
                     "solidserver_addr_id": str(attrs.get("solidserver_addr_id", "-1"))

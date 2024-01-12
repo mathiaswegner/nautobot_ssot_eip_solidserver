@@ -41,16 +41,25 @@ def iter_subnet_values_for_like_clause(cidr: netaddr.IPNetwork) -> list[str]:
         list: a list of CIDRs
     """
     cidr_list = []
-    if cidr.prefixlen <= 24:
-        # if the cidr is /24 or shorter, return the first the octets and trailing dot
-        cidr_string = str(cidr.ip)[: str(cidr.ip).rindex(".") + 1]
-        cidr_list.append(cidr_string)
-    else:
-        # if the cidr is longer than /24, iterate through the various combinations of
-        # first three octets and append them to cidr_list
-        for each_cidr in cidr.subnet(24):
-            subnet = str(each_cidr.ip)[: str(each_cidr.ip).rindex(".") + 1]
-            cidr_list.append(subnet)
+    if cidr.version == 4:
+        if cidr.prefixlen <= 24:
+            # if the cidr is /24 or shorter, return the first the octets and trailing dot
+            cidr_string = str(cidr.ip)[: str(cidr.ip).rindex(".") + 1]
+            cidr_list.append(cidr_string)
+        else:
+            # if the cidr is longer than /24, iterate through the various combinations of
+            # first three octets and append them to cidr_list
+            for each_cidr in cidr.subnet(24):
+                subnet = str(each_cidr.ip)[: str(each_cidr.ip).rindex(".") + 1]
+                cidr_list.append(subnet)
+    elif cidr.version == 6:
+        if cidr.prefixlen <= 112:
+            cidr_sting = str(cidr.ip)[: str(cidr.ip).rindex(":") + 1]
+            cidr_list.append(cidr_sting)
+        else:
+            for each_cidr in cidr.subnet(112):
+                subnet = str(each_cidr.ip)[: str(each_cidr.ip).rindex(":") + 1]
+                cidr_list.append(subnet)
     return cidr_list
 
 
@@ -98,6 +107,7 @@ def prefix_to_net(prefix: dict[str, Any]) -> netaddr.IPNetwork | None:
 
 def is_prefix_valid(prefix: SSoTIPPrefix) -> tuple[bool, str]:
     """check if prefix is valid
+    Prefixes should have an _id value and a non-zero network value
 
     Args:
         prefix (SSoTIPPrefix): a prefix record
@@ -126,6 +136,8 @@ def is_addr_valid(
     addr: SSoTIPAddress, addr_type: str
 ) -> tuple[bool, (str | SSoTIPAddress)]:
     """check if address is valid
+    Addresses may have an _id value of 0 if they are free addresses,
+    they should have a non-zero host value.
 
     Args:
         addr (SSoTIPAddress): an address record
