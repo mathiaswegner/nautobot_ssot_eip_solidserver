@@ -30,10 +30,16 @@ class SSoTNautobotAdapter(NautobotAdapter):
         self.sync: Sync = sync
 
     def _load_one_ipaddress(self, ipaddr: IPAddress) -> None:
+        """Create a single IPAddress object and load it into the adapter model.
+
+        Args:
+            ipaddr (IPAddress): The IPAddress object to load.
+        """
+        self.job.log_debug(f"Adapter loading address {ipaddr.host}")
         try:
             addr_id: str = ipaddr._custom_field_data.get("solidserver_addr_id")
         except (AttributeError, TypeError, ValueError):
-            addr_id = "-1"
+            addr_id = "not found"
         new_ip = self.ipaddress(
             host=netaddr.IPAddress(ipaddr.host),
             dns_name=ipaddr.dns_name,
@@ -49,6 +55,12 @@ class SSoTNautobotAdapter(NautobotAdapter):
             self.job.log_warning(f"Unable to load duplicate {ipaddr.address}. {err}")
 
     def _load_one_prefix(self, prefix: Prefix) -> None:
+        """Create a single Prefix object and load it into the adapter model.
+
+        Args:
+            prefix (Prefix): The Prefix object to load.
+        """
+        self.job.log_debug(f"Adapter loading prefix {prefix.prefix}")
         if not prefix._custom_field_data.get("solidserver_addr_id"):
             self.job.log_warning(
                 f"Prefix {prefix.prefix} has no solidserver_addr_id," + " skipping!"
@@ -57,7 +69,7 @@ class SSoTNautobotAdapter(NautobotAdapter):
         try:
             addr_id: str = prefix._custom_field_data.get("solidserver_addr_id")
         except (AttributeError, TypeError):
-            addr_id = "-1"
+            addr_id = "not found"
         new_prefix = self.prefix(
             network=netaddr.IPNetwork(f"{prefix.network}/{prefix.prefix_length}"),
             prefix_length=prefix.prefix_length,

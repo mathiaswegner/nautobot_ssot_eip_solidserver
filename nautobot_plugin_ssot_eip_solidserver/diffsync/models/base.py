@@ -26,7 +26,7 @@ class SSoTIPAddress(NautobotModel):
     host: netaddr.IPAddress
     solidserver_addr_id: Annotated[
         str, CustomFieldAnnotation(name="solidserver address id")
-    ]
+    ] = "not found"
     prefix_length: int
     status__name: str = "Imported From Solidserver"
 
@@ -47,6 +47,6 @@ class SSoTIPPrefix(NautobotModel):
     network: netaddr.IPNetwork
     solidserver_addr_id: Annotated[
         str, CustomFieldAnnotation(name="solidserver address id")
-    ]
+    ] = "not found"
     prefix_length: int
     status__name: str = "Imported From Solidserver"
