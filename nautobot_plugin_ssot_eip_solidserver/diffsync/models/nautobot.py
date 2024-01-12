@@ -85,13 +85,19 @@ class NautobotIPAddress(IPAddress):
                     "Setting solidserver_addr_id to -1 after exception dns_name = ''"
                 )
                 _address._custom_field_data = {"solidserver_addr_id": "-1"}
-            no_record = OrmStatus.objects.get(name="NO-IPAM-RECORD")
-            self.diffsync.job.log_debug(f"Got status {no_record}")
-            _address.status = no_record
+            status = OrmStatus.objects.get(name="NO-IPAM-RECORD")
+            if not status:
+                self.diffsync.job.log_warning("Failed to get status 'NO-IPAM-RECORD'")
+                return None
+            self.diffsync.job.log_debug(f"Got status {status}")
+            _address.status = status
         else:
-            unknown = OrmStatus.objects.get(name="Unknown")
-            self.diffsync.job.log_debug(f"Got status {unknown}")
-            _address.status = unknown
+            status = OrmStatus.objects.get(name="Unknown")
+            if not status:
+                self.diffsync.job.log_warning("Failed to get status 'Unknown'")
+                return None
+            self.diffsync.job.log_debug(f"Got status {status}")
+            _address.status = status
         try:
             _address.validated_save()
         except (ValidationError, ObjectNotCreated) as update_err:
@@ -143,6 +149,9 @@ class NautobotIPPrefix(IPPrefix):
         except ObjectDoesNotExist:
             pass
         status = OrmStatus.objects.get(name="Imported From Solidserver")
+        if not status:
+            diffsync.job.log_warning("Failed to get status 'Imported From Solidserver'")
+            return None
         if ids["prefix_length"] == 128:
             diffsync.job.log_warning(f"prefix {ids['network']} has /128 mask")
         elif ids["prefix_length"] == 129:
@@ -198,13 +207,19 @@ class NautobotIPPrefix(IPPrefix):
                 _prefix._custom_field_data = {
                     "solidserver_addr_id": str(attrs.get("solidserver_addr_id", "-1"))
                 }
-            no_record = OrmStatus.objects.get(name="NO-IPAM-RECORD")
-            self.diffsync.job.log_debug(f"Got status {no_record}")
-            _prefix.status = no_record
+            status = OrmStatus.objects.get(name="NO-IPAM-RECORD")
+            if not status:
+                self.diffsync.job.log_warning("Failed to get status 'NO-IPAM-RECORD'")
+                return None
+            self.diffsync.job.log_debug(f"Got status {status}")
+            _prefix.status = status
         else:
-            unknown = OrmStatus.objects.get(name="Unknown")
-            self.diffsync.job.log_debug(f"Got status {unknown}")
-            _prefix.status = unknown
+            status = OrmStatus.objects.get(name="Unknown")
+            if not status:
+                self.diffsync.job.log_warning("Failed to get status 'Unknown'")
+                return None
+            self.diffsync.job.log_debug(f"Got status {status}")
+            _prefix.status = status
         try:
             _prefix.validated_save()
         except (ValidationError, ObjectNotCreated) as update_err:
