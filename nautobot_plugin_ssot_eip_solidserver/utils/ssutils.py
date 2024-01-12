@@ -12,6 +12,11 @@ from typing import Any
 import netaddr  # type: ignore
 import validators  # type: ignore
 
+from nautobot_plugin_ssot_eip_solidserver.diffsync.models.base import (
+    SSoTIPAddress,
+    SSoTIPPrefix,
+)
+
 
 def unpack_class_params(params):
     """convert class parameters into a dictionary
@@ -89,3 +94,57 @@ def prefix_to_net(prefix: dict[str, Any]) -> netaddr.IPNetwork | None:
     else:
         return None
     return network
+
+
+def is_prefix_valid(prefix: SSoTIPPrefix) -> tuple[bool, str]:
+    """check if prefix is valid
+
+    Args:
+        prefix (SSoTIPPrefix): a prefix record
+
+    Returns:
+        tuple[bool, str]: a tuple containing a boolean and an error message
+    """
+    prefix_is_valid = True
+    err = " "
+    if prefix.solidserver_addr_id == "0":
+        err = f"Skipping {prefix} as it is invalid"
+        err = err + f"\naddr_id {prefix.solidserver_addr_id}"
+        err = err + f"\nhost {prefix.network}"
+        prefix_is_valid = False
+    if prefix.network == netaddr.IPNetwork(
+        "0.0.0.0/32"
+    ) or prefix.network == netaddr.IPNetwork("::/128"):
+        err = f"Skipping {prefix} as it is invalid.  "
+        err = err + f"addr_id {prefix.solidserver_addr_id}, "
+        err = err + f"host {prefix.network}"
+        prefix_is_valid = False
+    return (prefix_is_valid, err)
+
+
+def is_addr_valid(
+    addr: SSoTIPAddress, addr_type: str
+) -> tuple[bool, (str | SSoTIPAddress)]:
+    """check if address is valid
+
+    Args:
+        addr (SSoTIPAddress): an address record
+
+    Returns:
+        tuple[bool, str]: a tuple containing a boolean and an error message
+    """
+    addr_is_valid = True
+    err = " "
+    if addr.solidserver_addr_id == "0" and addr_type == "free":
+        addr.status__name = "Unassigned"
+        addr.solidserver_addr_id = "unassigned"
+    else:
+        addr.status__name = "Active"
+    if addr.host == netaddr.IPAddress("::0") or addr.host == netaddr.IPAddress(
+        "0.0.0.0"
+    ):
+        err = f"Skipping {addr} as it is invalid.  "
+        err = err + f"addr_id {addr.solidserver_addr_id}, "
+        err = err + f"host {addr.host}"
+        return (False, err)
+    return (addr_is_valid, addr)

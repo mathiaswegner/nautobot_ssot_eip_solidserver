@@ -80,16 +80,13 @@ class SolidserverAdapter(DiffSync):
             prefix_length=cidr_size,
         )
         if new_addr:
-            if new_addr.solidserver_addr_id == "0" and each_addr.get("free"):
-                new_addr.status__name = "Unassigned"
+            valid_addr, new_addr_or_err = ssutils.is_addr_valid(
+                new_addr, each_addr.get("type", "free")
+            )
+            if valid_addr:
+                self._add_object_to_diffsync(new_addr_or_err)
             else:
-                new_addr.status__name = "Active"
-            if new_addr.host == netaddr.IPAddress("0.0.0.0"):
-                self.job.log_warning(f"Skipping {new_addr} as it is invalid")
-                self.job.log_warning(f"addr_id {new_addr.solidserver_addr_id}")
-                self.job.log_warning(f"host {new_addr.host}")
-                return None
-            self._add_object_to_diffsync(new_addr)
+                self.job.log_warning(new_addr_or_err)
         if new_addr and new_addr.prefix_length:
             return new_addr.prefix_length
         return None
@@ -124,16 +121,13 @@ class SolidserverAdapter(DiffSync):
             prefix_length=cidr_size,
         )
         if new_addr:
-            if new_addr.solidserver_addr_id == "0" and each_addr.get("free"):
-                new_addr.status__name = "Unassigned"
+            valid_addr, new_addr_or_err = ssutils.is_addr_valid(
+                new_addr, each_addr.get("type", "free")
+            )
+            if valid_addr:
+                self._add_object_to_diffsync(new_addr_or_err)
             else:
-                new_addr.status__name = "Active"
-            if new_addr.host == netaddr.IPAddress("::0"):
-                self.job.log_warning(f"Skipping {new_addr} as it is invalid")
-                self.job.log_warning(f"addr_id {new_addr.solidserver_addr_id}")
-                self.job.log_warning(f"host {new_addr.host}")
-                return None
-            self._add_object_to_diffsync(new_addr)
+                self.job.log_warning(new_addr_or_err)
         if new_addr and new_addr.prefix_length:
             return new_addr.prefix_length
         return None
@@ -164,10 +158,9 @@ class SolidserverAdapter(DiffSync):
             prefix_length=cidr_size,
         )
         if new_prefix:
-            if new_prefix.network == netaddr.IPNetwork("0.0.0.0/32"):
-                self.job.log_warning(f"Skipping {new_prefix} as it is invalid")
-                self.job.log_warning(f"addr_id {new_prefix.solidserver_addr_id}")
-                self.job.log_warning(f"host {new_prefix.network}")
+            invalid_prefix, error = ssutils.is_prefix_valid(new_prefix)
+            if invalid_prefix:
+                self.job.log_warning(error)
                 return
             self._add_object_to_diffsync(new_prefix)
 
@@ -195,10 +188,9 @@ class SolidserverAdapter(DiffSync):
             prefix_length=int(each_prefix.get("subnet6_prefix", 128)),
         )
         if new_prefix:
-            if new_prefix.network == netaddr.IPNetwork("::/128"):
-                self.job.log_warning(f"Skipping {new_prefix} as it is invalid")
-                self.job.log_warning(f"addr_id {new_prefix.solidserver_addr_id}")
-                self.job.log_warning(f"host {new_prefix.network}")
+            invalid_prefix, error = ssutils.is_prefix_valid(new_prefix)
+            if invalid_prefix:
+                self.job.log_warning(error)
                 return
             self._add_object_to_diffsync(new_prefix)
 
