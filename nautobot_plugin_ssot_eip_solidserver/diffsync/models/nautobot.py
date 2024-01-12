@@ -36,10 +36,12 @@ class NautobotIPAddress(IPAddress):
             return None
         except ObjectDoesNotExist:
             pass
+        diffsync.job.log_debug("In create, about to get status")
         status = OrmStatus.objects.get(name="Imported From Solidserver")
         if not status:
             diffsync.job.log_warning("Failed to get status 'Imported From Solidserver'")
             return None
+        diffsync.job.log_debug(f"Got status {status}")
         new_address = OrmIPAddress(
             host=ids["host"],
             prefix_length=attrs["prefix_length"],
