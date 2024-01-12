@@ -398,7 +398,6 @@ class SolidServerAPI:
         ss_addrs: list[Any] = []
         sub_cidrs: list[str] = []
         self.job.log_debug("Starting get addresses by network")
-        self.job.log_debug(f"sub_cidrs is {sub_cidrs}")
         action = "unset"
         if cidr.version == 4:
             action = "ip_address_list"
@@ -407,6 +406,7 @@ class SolidServerAPI:
             action = "ip6_address6_list"
             sub_cidrs = ssutils.iter_ip6_subnet_values_for_like_clause(cidr)
         params: dict[str, str | int] = {"LIMIT": LIMIT}
+        self.job.log_debug(f"sub_cidrs is {sub_cidrs}")
         for each_cidr in sub_cidrs:
             self.job.log_debug(f"fetching Solidserver address for {each_cidr}")
             params["WHERE"] = each_cidr
