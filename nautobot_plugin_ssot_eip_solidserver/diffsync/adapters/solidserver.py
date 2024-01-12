@@ -80,6 +80,14 @@ class SolidserverAdapter(DiffSync):
             prefix_length=cidr_size,
         )
         if new_addr:
+            if (
+                new_addr.solidserver_addr_id == "0"
+                or new_addr.host == netaddr.IPAddress("0.0.0.0")
+            ):
+                self.job.log_warning(f"Skipping {new_addr} as it is invalid")
+                self.job.log_warning(f"addr_id {new_addr.solidserver_addr_id}")
+                self.job.log_warning(f"host {new_addr.host}")
+                return
             self._add_object_to_diffsync(new_addr)
         if new_addr and new_addr.prefix_length:
             return new_addr.prefix_length
@@ -115,6 +123,14 @@ class SolidserverAdapter(DiffSync):
             prefix_length=cidr_size,
         )
         if new_addr:
+            if (
+                new_addr.solidserver_addr_id == "0"
+                or new_addr.host == netaddr.IPAddress("::0")
+            ):
+                self.job.log_warning(f"Skipping {new_addr} as it is invalid")
+                self.job.log_warning(f"addr_id {new_addr.solidserver_addr_id}")
+                self.job.log_warning(f"host {new_addr.host}")
+                return
             self._add_object_to_diffsync(new_addr)
         if new_addr and new_addr.prefix_length:
             return new_addr.prefix_length
@@ -146,6 +162,14 @@ class SolidserverAdapter(DiffSync):
             prefix_length=cidr_size,
         )
         if new_prefix:
+            if (
+                new_prefix.solidserver_addr_id == "0"
+                or new_prefix.network == netaddr.IPNetwork("0.0.0.0/32")
+            ):
+                self.job.log_warning(f"Skipping {new_prefix} as it is invalid")
+                self.job.log_warning(f"addr_id {new_prefix.solidserver_addr_id}")
+                self.job.log_warning(f"host {new_prefix.network}")
+                return
             self._add_object_to_diffsync(new_prefix)
 
     def _process_ipv6_prefix(self, each_prefix: dict[str, str]) -> None:
@@ -172,6 +196,14 @@ class SolidserverAdapter(DiffSync):
             prefix_length=int(each_prefix.get("subnet6_prefix", 128)),
         )
         if new_prefix:
+            if (
+                new_prefix.solidserver_addr_id == "0"
+                or new_prefix.network == netaddr.IPNetwork("::/128")
+            ):
+                self.job.log_warning(f"Skipping {new_prefix} as it is invalid")
+                self.job.log_warning(f"addr_id {new_prefix.solidserver_addr_id}")
+                self.job.log_warning(f"host {new_prefix.network}")
+                return
             self._add_object_to_diffsync(new_prefix)
 
     def _load_addresses(self, address_filter=None, domain_filter=None):
