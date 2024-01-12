@@ -49,6 +49,7 @@ class SSoTNautobotAdapter(NautobotAdapter):
             description=ipaddr.description,
             solidserver_addr_id=addr_id,
             prefix_length=ipaddr.prefix_length,
+            status__name=ipaddr.status.name,
         )
         message = f"Loaded address {ipaddr.host}"
         self.job.log_debug(message=message)
@@ -81,6 +82,7 @@ class SSoTNautobotAdapter(NautobotAdapter):
             prefix_length=prefix.prefix_length,
             description=prefix.description,
             solidserver_addr_id=addr_id,
+            status__name=prefix.status.name,
         )
         try:
             self.add(new_prefix)

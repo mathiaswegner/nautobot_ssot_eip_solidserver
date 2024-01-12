@@ -22,7 +22,7 @@ class SSoTIPAddress(NautobotModel):
         "status__name",
     )
     dns_name: Optional[str]
-    description: Optional[str]
+    description: Optional[str | None]
     host: netaddr.IPAddress
     solidserver_addr_id: Annotated[
         str, CustomFieldAnnotation(name="solidserver address id")
@@ -43,7 +43,7 @@ class SSoTIPPrefix(NautobotModel):
         "status__name",
     )
 
-    description: Optional[str]
+    description: Optional[str | None]
     network: netaddr.IPNetwork
     solidserver_addr_id: Annotated[
         str, CustomFieldAnnotation(name="solidserver address id")

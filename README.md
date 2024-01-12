@@ -2,7 +2,7 @@
 
 This is a plugin for the Nautobot SSoT plugin to pull selected data from EIP solidserver and merge it into Nautobot as IP Address and IP Prefix objects.
 
-In addition to synchronizing the data, it adds the ID of the solidserver object to a nautobot custom field named solidserver addr id w/slug solidserver_addr_id.
+In addition to synchronizing the data, it adds the ID of the solidserver object to a nautobot custom field named solidserver addr id w/slug solidserver_addr_id and a string value.
 
 It expects four statuses to be available - NO-IPAM-RECORD, Imported From Solidserver, Active, and Unknown.
 
