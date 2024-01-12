@@ -66,6 +66,8 @@ class SolidserverAdapter(DiffSync):
             descr = ssutils.unpack_class_params(each_addr["ip_class_parameters"]).get(
                 "__eip_description"
             )
+            if not descr:
+                descr = " "
         except (ValueError, KeyError):
             descr = " "
         except AttributeError:
@@ -108,6 +110,8 @@ class SolidserverAdapter(DiffSync):
             descr = ssutils.unpack_class_params(each_addr["ip6_class_parameters"]).get(
                 "__eip_description"
             )
+            if not descr:
+                descr = " "
         except (ValueError, KeyError):
             descr = " "
         except AttributeError:
@@ -147,6 +151,8 @@ class SolidserverAdapter(DiffSync):
             descr = ssutils.unpack_class_params(each_prefix["ip_class_parameters"]).get(
                 "__eip_description"
             )
+            if not descr:
+                descr = " "
         except (ValueError, KeyError):
             descr = " "
         new_prefix = self.prefix(
@@ -177,6 +183,8 @@ class SolidserverAdapter(DiffSync):
             descr = ssutils.unpack_class_params(
                 each_prefix["ip6_class_parameters"]
             ).get("__eip_description")
+            if not descr:
+                descr = " "
         except (ValueError, KeyError):
             descr = " "
         new_prefix = self.prefix(
