@@ -8,6 +8,10 @@ from diffsync.exceptions import ObjectNotCreated
 from django.conf import settings  # type: ignore
 from django.core.exceptions import ObjectDoesNotExist, ValidationError  # type: ignore
 from django.urls import reverse  # type: ignore
+from nautobot_ssot.jobs.base import DataMapping, DataSource  # type: ignore
+from nautobot_ssot.models import Sync  # type: ignore
+from netaddr import AddrFormatError  # type: ignore
+
 from nautobot.extras.jobs import (  # type: ignore
     BooleanVar,
     IntegerVar,
@@ -16,10 +20,6 @@ from nautobot.extras.jobs import (  # type: ignore
     StringVar,
 )
 from nautobot.ipam.models import IPAddress, Prefix  # type: ignore
-from nautobot_ssot.jobs.base import DataMapping, DataSource  # type: ignore
-from nautobot_ssot.models import Sync  # type: ignore
-from netaddr import AddrFormatError  # type: ignore
-
 from nautobot_plugin_ssot_eip_solidserver import SSoTEIPSolidServerConfig
 from nautobot_plugin_ssot_eip_solidserver.diffsync.adapters import nautobot, solidserver
 from nautobot_plugin_ssot_eip_solidserver.utils import ssutils
@@ -103,7 +103,7 @@ class SolidserverDataSource(DataSource, Job):
         unique ID."""
         obj = None
         try:
-            if model_name == "address":
+            if model_name == "ipaddress":
                 obj = IPAddress.objects.get(host=unique_id)
             elif model_name == "prefix":
                 prefix, prefixlen = unique_id.split("__")
@@ -242,9 +242,10 @@ class SolidserverDataSource(DataSource, Job):
                 self.log_success(message="Sync succeeded.")
             except ValidationError as valid_err:
                 self.log_failure(
-                    f"Validation error {valid_err}, if this is a name query it may be"
+                    f"Validation error {valid_err}.  If this is a name query it may be"
                     " that some addresses in Nautobot are missing FQDNs so they can't"
-                    " be matched to Solidserver"
+                    " be matched to Solidserver and this job has tried to create"
+                    " duplicate addresses."
                 )
             except ObjectNotCreated as create_err:
                 self.log_failure(f"Unable to create object {create_err}")
