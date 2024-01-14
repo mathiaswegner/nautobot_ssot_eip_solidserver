@@ -35,13 +35,13 @@ class SSoTNautobotAdapter(NautobotAdapter):
         Args:
             ipaddr (IPAddress): The IPAddress object to load.
         """
-        self.job.log_debug(f"Adapter loading address {ipaddr.host}")
+        self.job.log_debug(f"NB adapter loading ip address {ipaddr.host}")
         try:
             addr_id: str = ipaddr._custom_field_data.get("solidserver_addr_id")
         except (AttributeError, TypeError, ValueError):
             addr_id = "not found"
         if not addr_id:
-            self.job.log_warning(f"Address {ipaddr.host} has no solidserver_addr_id")
+            self.job.log_warning(f"NB address {ipaddr.host} has no solidserver_addr_id")
             addr_id = "not found"
         new_ip = self.ipaddress(
             host=str(ipaddr.host),
@@ -51,12 +51,12 @@ class SSoTNautobotAdapter(NautobotAdapter):
             prefix_length=ipaddr.prefix_length,
             status__name=ipaddr.status.name,
         )
-        message = f"Loaded address {ipaddr.host}"
-        self.job.log_debug(message=message)
         try:
             self.add(new_ip)
         except ObjectAlreadyExists as err:
-            self.job.log_warning(f"Unable to load duplicate {ipaddr.address}. {err}")
+            self.job.log_warning(
+                f"NB Adapter unable to load duplicate {ipaddr.host}. {err}"
+            )
 
     def _load_one_prefix(self, prefix: Prefix) -> None:
         """Create a single Prefix object and load it into the adapter model.
@@ -64,18 +64,15 @@ class SSoTNautobotAdapter(NautobotAdapter):
         Args:
             prefix (Prefix): The Prefix object to load.
         """
-        self.job.log_debug(f"Adapter loading prefix {prefix.prefix}")
-        if not prefix._custom_field_data.get("solidserver_addr_id"):
-            self.job.log_warning(
-                f"Prefix {prefix.prefix} has no solidserver_addr_id," + " skipping!"
-            )
-            return None
+        self.job.log_debug(f"NB adapter loading prefix {prefix.prefix}")
         try:
             addr_id: str = prefix._custom_field_data.get("solidserver_addr_id")
         except (AttributeError, TypeError):
             addr_id = "not found"
         if not addr_id:
-            self.job.log_warning(f"Address {prefix.network} has no solidserver_addr_id")
+            self.job.log_warning(
+                f"NB address {prefix.network} has no solidserver_addr_id"
+            )
             addr_id = "not found"
         new_prefix = self.prefix(
             network=str(prefix.network),
@@ -88,7 +85,7 @@ class SSoTNautobotAdapter(NautobotAdapter):
             self.add(new_prefix)
         except ObjectAlreadyExists as err:
             self.job.log_warning(
-                f"Unable to load duplicate {new_prefix.network}. {err}"
+                f"NB adapter unable to load duplicate {new_prefix.network}. {err}"
             )
 
     def _load_filtered_ip_addresses(self, filter_field, this_filter):

@@ -6,7 +6,7 @@ import netaddr  # type: ignore
 from diffsync.enum import DiffSyncFlags
 from diffsync.exceptions import ObjectNotCreated
 from django.conf import settings  # type: ignore
-from django.core.exceptions import ObjectDoesNotExist  # type: ignore
+from django.core.exceptions import ObjectDoesNotExist, ValidationError  # type: ignore
 from django.urls import reverse  # type: ignore
 from nautobot.extras.jobs import (  # type: ignore
     BooleanVar,
@@ -35,7 +35,7 @@ class SolidserverDataSource(DataSource, Job):
     name_filter_from_ui = StringVar(
         required=False,
         default="",
-        label="Optional domain name filter",
+        label="Optional domain name filter (potentially unreliable!)",
         description="Comma separated list of domains, only used for addresses",
     )
     address_filter_from_ui = IPNetworkVar(
@@ -51,9 +51,6 @@ class SolidserverDataSource(DataSource, Job):
     )
     solidserver_timeout = IntegerVar(
         required=False, default=120, label="Timeout (sec) for Solidserver"
-    )
-    debug = BooleanVar(
-        required=False, default=False, description="Enable for verbose debug logging."
     )
 
     class Meta:
@@ -200,13 +197,13 @@ class SolidserverDataSource(DataSource, Job):
                 + "prefixes from SS"
             )
             self.log_debug(
-                f"Got {len(self.source_adapter.dict().get('address', []))} "
+                f"Got {len(self.source_adapter.dict().get('ipaddress', []))} "
                 + "addresses from SS"
             )
             self.log_debug(f"Keys: {self.source_adapter.dict().keys()}")
             self.log_debug(f"Prefixes: {self.source_adapter.dict().get('prefix', '')}")
             self.log_debug(
-                f"Addresses: {self.source_adapter.dict().get('address', '')}"
+                f"Addresses: {self.source_adapter.dict().get('ipaddress', '')}"
             )
         except AttributeError:
             self.log_debug(message="Couldn't get length from source adapter")
@@ -221,13 +218,13 @@ class SolidserverDataSource(DataSource, Job):
                 + "prefixes from NB"
             )
             self.log_debug(
-                f"Got {len(self.target_adapter.dict().get('address', []))} "
+                f"Got {len(self.target_adapter.dict().get('ipaddress', []))} "
                 + "addresses from NB"
             )
             self.log_debug(f"Keys: {self.target_adapter.dict().keys()}")
             self.log_debug(f"Prefixes: {self.target_adapter.dict().get('prefix', '')}")
             self.log_debug(
-                f"Addresses: {self.target_adapter.dict().get('address', '')}"
+                f"Addresses: {self.target_adapter.dict().get('ipaddress', '')}"
             )
         except AttributeError:
             self.log_debug(message="Couldn't get length from target adapter")
@@ -243,6 +240,12 @@ class SolidserverDataSource(DataSource, Job):
             try:
                 self.source_adapter.sync_to(self.target_adapter)
                 self.log_success(message="Sync succeeded.")
+            except ValidationError as valid_err:
+                self.log_failure(
+                    f"Validation error {valid_err}, if this is a name query it may be"
+                    " that some addresses in Nautobot are missing FQDNs so they can't"
+                    " be matched to Solidserver"
+                )
             except ObjectNotCreated as create_err:
                 self.log_failure(f"Unable to create object {create_err}")
 

@@ -36,13 +36,13 @@ class SolidserverAdapter(DiffSync):
     def _add_object_to_diffsync(self, obj: Any) -> None:
         try:
             self.add(obj)
-            self.job.log_debug(f"Added {obj}")
+            self.job.log_debug(f"SS Adapter added {obj}")
         except ObjectAlreadyExists as err:
             if isinstance(obj, SolidserverIPAddress):
-                self.job.log_warning(f"Skipping duplicate {obj.host}. {err}")
+                self.job.log_warning(f"SS Adapter skipping duplicate {obj.host}. {err}")
             elif isinstance(obj, SolidserverIPPrefix):
                 self.job.log_warning(
-                    f"Skipping duplicate {obj.network} "
+                    f"SS Adapter skipping duplicate {obj.network} "
                     + f"/{obj.prefix_length}. {err}"
                 )
 
