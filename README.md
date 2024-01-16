@@ -43,6 +43,9 @@ The following should be added to your nautobot_config.py and updated for your en
 - nnn_credential is expected to be a string containing a password.
 
 ## Notes/tips on usage
+
 The default timeout of 120 seconds is enough for many queries, but larger queries will take more time.  An IPv4 /18 network containing ~1700 records takes approximately 90 seconds.  An IPv4 /18 network containing ~4500 records takes approximately 270 seconds.  An IPv4 /19 network containing ~5200 records takes approxmately 300 seconds.  Exactly when to increase the timeout depends on how broad the query is and how many records are in the query results.
 
-The name filter is sometimes useful but also can be unreliable.  If no fqdn is currently present on an address, it will not be found by the name filter and you may get job failures as the job tries to add an address that already partially exists.  CIDR filters are more reliable.
+### BIG CAVEAT ABOUT THE NAME FILTER!
+
+The name filter is sometimes useful but also can be _unreliable_ and will _potentially delete valid records from Nautobot_! If no fqdn is currently present on an address, it will not be found by the name filter and you may get job failures as the job tries to add an address that already partially exists.  **If you choose to use the name filter, do a dry-run first!**
