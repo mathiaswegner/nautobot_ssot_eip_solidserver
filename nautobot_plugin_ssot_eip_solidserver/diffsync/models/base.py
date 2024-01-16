@@ -24,7 +24,7 @@ class SSoTIPAddress(NautobotModel):
     description: Optional[str | None]
     host: str
     solidserver_addr_id: Annotated[
-        str, CustomFieldAnnotation(name="solidserver address id")
+        str, CustomFieldAnnotation(name="solidserver_addr_id")
     ] = "not found"
     prefix_length: int
     status__name: str = "Imported From Solidserver"
@@ -45,7 +45,7 @@ class SSoTIPPrefix(NautobotModel):
     description: Optional[str | None]
     network: str
     solidserver_addr_id: Annotated[
-        str, CustomFieldAnnotation(name="solidserver address id")
+        str, CustomFieldAnnotation(name="solidserver_addr_id")
     ] = "not found"
     prefix_length: int
     status__name: str = "Imported From Solidserver"
