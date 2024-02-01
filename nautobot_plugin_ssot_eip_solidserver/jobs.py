@@ -8,10 +8,6 @@ from diffsync.exceptions import ObjectNotCreated
 from django.conf import settings  # type: ignore
 from django.core.exceptions import ObjectDoesNotExist, ValidationError  # type: ignore
 from django.urls import reverse  # type: ignore
-from nautobot_ssot.jobs.base import DataMapping, DataSource  # type: ignore
-from nautobot_ssot.models import Sync  # type: ignore
-from netaddr import AddrFormatError  # type: ignore
-
 from nautobot.extras.jobs import (  # type: ignore
     BooleanVar,
     IntegerVar,
@@ -20,6 +16,10 @@ from nautobot.extras.jobs import (  # type: ignore
     StringVar,
 )
 from nautobot.ipam.models import IPAddress, Prefix  # type: ignore
+from nautobot_ssot.jobs.base import DataMapping, DataSource  # type: ignore
+from nautobot_ssot.models import Sync  # type: ignore
+from netaddr import AddrFormatError  # type: ignore
+
 from nautobot_plugin_ssot_eip_solidserver import SSoTEIPSolidServerConfig
 from nautobot_plugin_ssot_eip_solidserver.diffsync.adapters import nautobot, solidserver
 from nautobot_plugin_ssot_eip_solidserver.utils import ssutils
@@ -150,10 +150,7 @@ class SolidserverDataSource(DataSource, Job):
         operation and, if commit, sync operation
         """
         try:
-            self.log_debug(
-                "version"
-                f" {SSoTEIPSolidServerConfig.version} ({SSoTEIPSolidServerConfig.build})"
-            )
+            self.log_debug(f"version {SSoTEIPSolidServerConfig.version}")
             self.log_debug(f"commit {self.commit}")
         except AttributeError:
             self.log_debug("attr error trying to get self.commit")

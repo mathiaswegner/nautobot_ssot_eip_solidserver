@@ -272,22 +272,26 @@ class SolidserverAdapter(DiffSync):
                 message = f"address_filter {len(filter_prefixes)} prefixes"
                 self.job.log_debug(message=message)
         if subnet_list:
-            self.job.log_debug(message=f"Subnet list {len(subnet_list)}")
+            self.job.log_debug(message=f"Subnet list has {len(subnet_list)} items")
             filter_name_prefixes = self.conn.get_prefixes_by_id(subnet_list)
+            self.job.log_debug(
+                message=f"Filter name prefixes has {len(filter_name_prefixes)} items"
+            )
+            self.job.log_debug(message=f"Subnet list has {len(subnet_list)} items")
             if filter_name_prefixes:
+                self.job.log_debug(message="Adding filter name prefixes")
                 all_prefixes.extend(filter_name_prefixes)
-                message = f"name_filter {len(filter_name_prefixes)} prefixes"
-                self.job.log_debug(message=message)
         if not address_filter and not subnet_list:
             all_prefixes = self.conn.get_all_prefixes()
             message = f"No filter total {len(all_prefixes)} prefixes"
             self.job.log_debug(message=message)
 
+        self.job.log_debug(f"Processing {len(all_prefixes)} prefixes")
         for each_prefix in all_prefixes:
+            self.job.log_debug(f"Processing {each_prefix}")
             if isinstance(each_prefix, list):
                 if len(each_prefix) != 1:
-                    message = f"Too many prefixes! {each_prefix}"
-                    self.job.log_warning(message=message)
+                    self.job.log_warning(message=f"Too many prefixes! {each_prefix}")
                 each_prefix = each_prefix[0]
             if each_prefix.get("is_terminal"):
                 if each_prefix.get("subnet_id"):
