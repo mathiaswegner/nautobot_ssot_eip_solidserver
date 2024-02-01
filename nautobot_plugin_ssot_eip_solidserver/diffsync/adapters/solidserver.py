@@ -156,7 +156,7 @@ class SolidserverAdapter(DiffSync):
         except (ValueError, KeyError):
             descr = " "
         self.job.log_debug(
-            f"About to create prefix {each_prefix.get('subnet_name')}/{cidr_size}"
+            f"About to create prefix {each_prefix.get('start_hostaddr')}/{cidr_size}"
         )
         new_prefix = self.prefix(
             description=descr,
@@ -165,9 +165,15 @@ class SolidserverAdapter(DiffSync):
             prefix_length=cidr_size,
         )
         if new_prefix:
+            self.job.log_debug(
+                f"new prefix {new_prefix.network}/{new_prefix.prefix_length}"
+            )
             invalid_prefix, error = ssutils.is_prefix_valid(new_prefix)
             if invalid_prefix:
-                self.job.log_warning(error)
+                self.job.log_warning(
+                    "Invalid prefix"
+                    f" {new_prefix.network}/{new_prefix.prefix_length} {error}"
+                )
                 return
             self._add_object_to_diffsync(new_prefix)
 
@@ -303,13 +309,14 @@ class SolidserverAdapter(DiffSync):
             if each_prefix.get("is_terminal"):
                 if each_prefix.get("subnet_id"):
                     # ipv4
-                    subnet_size = IPV4_SUBNET_SIZE_MAP.get(
-                        each_prefix.get("subnet_size"), "32"
-                    )
-                    self.job.log_debug(
-                        message=(
-                            f"Range {each_prefix.get('start_hostaddr')}/{subnet_size}"
+                    try:
+                        cidr_size: int = IPV4_SUBNET_SIZE_MAP.get(
+                            int(each_prefix.get("subnet_size", 1)), 32
                         )
+                    except (ValueError, KeyError):
+                        cidr_size = 32
+                    self.job.log_debug(
+                        message=f"Range {each_prefix.get('start_hostaddr')}/{cidr_size}"
                     )
                     self._process_ipv4_prefix(each_prefix)
                 elif each_prefix.get("subnet6_id"):
