@@ -294,11 +294,12 @@ class SolidserverAdapter(DiffSync):
 
         self.job.log_debug(f"Processing {len(all_prefixes)} prefixes")
         for each_prefix in all_prefixes:
-            self.job.log_debug(f"Processing {each_prefix.get('subnet_name')}")
             if isinstance(each_prefix, list):
                 if len(each_prefix) != 1:
                     self.job.log_warning(message=f"Too many prefixes! {each_prefix}")
+                    continue
                 each_prefix = each_prefix[0]
+            self.job.log_debug(f"Processing {each_prefix.get('subnet_name')}")
             if each_prefix.get("is_terminal"):
                 if each_prefix.get("subnet_id"):
                     # ipv4
