@@ -294,7 +294,7 @@ class SolidserverAdapter(DiffSync):
 
         self.job.log_debug(f"Processing {len(all_prefixes)} prefixes")
         for each_prefix in all_prefixes:
-            self.job.log_debug(f"Processing {each_prefix.subnet_name}")
+            self.job.log_debug(f"Processing {each_prefix.get('subnet_name')}")
             if isinstance(each_prefix, list):
                 if len(each_prefix) != 1:
                     self.job.log_warning(message=f"Too many prefixes! {each_prefix}")
@@ -306,7 +306,9 @@ class SolidserverAdapter(DiffSync):
                         each_prefix.get("subnet_size"), "32"
                     )
                     self.job.log_debug(
-                        message=f"Range {each_prefix.start_hostaddr}/{subnet_size}"
+                        message=(
+                            f"Range {each_prefix.get('start_hostaddr')}/{subnet_size}"
+                        )
                     )
                     self._process_ipv4_prefix(each_prefix)
                 elif each_prefix.get("subnet6_id"):
@@ -314,7 +316,7 @@ class SolidserverAdapter(DiffSync):
                     self.job.log_debug(
                         message=(
                             "Range"
-                            f" {each_prefix.start_hostaddr}/{each_prefix.subnet_size}"
+                            f" {each_prefix.get('start_hostaddr')}/{each_prefix.get('subnet_size')}"
                         )
                     )
                     self._process_ipv6_prefix(each_prefix)
