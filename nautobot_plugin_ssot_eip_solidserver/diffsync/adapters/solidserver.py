@@ -168,11 +168,11 @@ class SolidserverAdapter(DiffSync):
             self.job.log_debug(
                 f"new prefix {new_prefix.network}/{new_prefix.prefix_length}"
             )
-            invalid_prefix, error = ssutils.is_prefix_valid(new_prefix)
-            if invalid_prefix:
+            valid_prefix, error = ssutils.is_prefix_valid(new_prefix)
+            if not valid_prefix:
                 self.job.log_warning(
                     "Invalid prefix"
-                    f" {new_prefix.network}/{new_prefix.prefix_length} {error}"
+                    f" {new_prefix.network}/{new_prefix.prefix_length}, err: {error}"
                 )
                 return
             self._add_object_to_diffsync(new_prefix)
@@ -202,9 +202,12 @@ class SolidserverAdapter(DiffSync):
             prefix_length=int(each_prefix.get("subnet6_prefix", 128)),
         )
         if new_prefix:
-            invalid_prefix, error = ssutils.is_prefix_valid(new_prefix)
-            if invalid_prefix:
-                self.job.log_warning(error)
+            valid_prefix, error = ssutils.is_prefix_valid(new_prefix)
+            if not valid_prefix:
+                self.job.log_warning(
+                    "Invalid prefix"
+                    f" {new_prefix.network}/{new_prefix.prefix_length}, err: {error}"
+                )
                 return
             self._add_object_to_diffsync(new_prefix)
 
