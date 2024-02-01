@@ -140,12 +140,13 @@ class SolidserverAdapter(DiffSync):
 
         Args:
             each_prefix (dict): the Solidserver prefix record
-
-        Returns:
-            SolidserverPrefix: the diffsync model
         """
-        subnet_size = str(bin(int(each_prefix.get("subnet_size", "0")))).lstrip("0b")
-        cidr_size = 32 - subnet_size.count("0")
+        try:
+            cidr_size: int = IPV4_SUBNET_SIZE_MAP.get(
+                int(each_prefix.get("subnet_size", 1)), 32
+            )
+        except (ValueError, KeyError):
+            cidr_size = 32
         try:
             descr = ssutils.unpack_class_params(each_prefix["ip_class_parameters"]).get(
                 "__eip_description"
@@ -154,6 +155,9 @@ class SolidserverAdapter(DiffSync):
                 descr = " "
         except (ValueError, KeyError):
             descr = " "
+        self.job.log_debug(
+            f"About to create prefix {each_prefix.get('subnet_name')}/{cidr_size}"
+        )
         new_prefix = self.prefix(
             description=descr,
             network=str(each_prefix.get("start_hostaddr")),
@@ -172,9 +176,6 @@ class SolidserverAdapter(DiffSync):
 
         Args:
             each_prefix (dict): the Solidserver prefix record
-
-        Returns:
-            SolidserverPrefix: the diffsync model
         """
         try:
             descr = ssutils.unpack_class_params(
@@ -184,6 +185,10 @@ class SolidserverAdapter(DiffSync):
                 descr = " "
         except (ValueError, KeyError):
             descr = " "
+        self.job.log_debug(
+            f"About to create prefix {each_prefix.get('subnet6_name')}/"
+            + f"{each_prefix.get('subnet6_prefix')}"
+        )
         new_prefix = self.prefix(
             description=descr,
             network=str(each_prefix.get("start_hostaddr")),
@@ -269,8 +274,9 @@ class SolidserverAdapter(DiffSync):
             filter_prefixes = self.conn.get_prefixes_by_network(address_filter)
             if filter_prefixes:
                 all_prefixes.extend(filter_prefixes)
-                message = f"address_filter {len(filter_prefixes)} prefixes"
-                self.job.log_debug(message=message)
+                self.job.log_debug(
+                    message=f"Address filter prefixes has {len(filter_prefixes)} items"
+                )
         if subnet_list:
             self.job.log_debug(message=f"Subnet list has {len(subnet_list)} items")
             filter_name_prefixes = self.conn.get_prefixes_by_id(subnet_list)
@@ -288,7 +294,7 @@ class SolidserverAdapter(DiffSync):
 
         self.job.log_debug(f"Processing {len(all_prefixes)} prefixes")
         for each_prefix in all_prefixes:
-            self.job.log_debug(f"Processing {each_prefix}")
+            self.job.log_debug(f"Processing {each_prefix.subnet_name}")
             if isinstance(each_prefix, list):
                 if len(each_prefix) != 1:
                     self.job.log_warning(message=f"Too many prefixes! {each_prefix}")
@@ -296,9 +302,21 @@ class SolidserverAdapter(DiffSync):
             if each_prefix.get("is_terminal"):
                 if each_prefix.get("subnet_id"):
                     # ipv4
+                    subnet_size = IPV4_SUBNET_SIZE_MAP.get(
+                        each_prefix.get("subnet_size"), "32"
+                    )
+                    self.job.log_debug(
+                        message=f"Range {each_prefix.start_hostaddr}/{subnet_size}"
+                    )
                     self._process_ipv4_prefix(each_prefix)
                 elif each_prefix.get("subnet6_id"):
                     # ipv6
+                    self.job.log_debug(
+                        message=(
+                            "Range"
+                            f" {each_prefix.start_hostaddr}/{each_prefix.subnet_size}"
+                        )
+                    )
                     self._process_ipv6_prefix(each_prefix)
 
     def load(self, addrs=True, prefixes=True, address_filter=None, domain_filter=None):
