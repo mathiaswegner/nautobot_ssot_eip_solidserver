@@ -14,7 +14,7 @@ packages = [{include = "nautobot_plugin_ssot_eip_solidserver"}]
 
 [tool.poetry.dependencies]
 python = ">=3.9,<3.12"
-validators = ">=0.20.0"
+validators = ">=0.22.0"
 nautobot = ">=1.6,<2.0"
 nautobot_ssot = ">=1.6.0,<2.0"
 types-requests = "<=2.31.0.7"
