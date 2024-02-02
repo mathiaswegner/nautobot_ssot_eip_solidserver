@@ -58,6 +58,36 @@ def iter_ip4_subnet_values_for_like_clause(cidr: netaddr.IPNetwork) -> list[str]
     return search_list
 
 
+def get_ip4_subnet_start_and_end_hexes_query(cidr: netaddr.IPNetwork) -> str:
+    """return the first and last addresses in a CIDR as a query string
+    for the solidserver api
+
+    Args:
+        cidr (netaddr.IPNetwork): a CIDR
+
+    Returns:
+        str: a query string for all subnets within a CIDR
+    """
+    first_addr = str(hex(cidr.first)).lstrip("0x").rjust(8, "0")
+    last_addr = str(hex(cidr.last)).lstrip("0x").rjust(8, "0")
+    return f"start_ip_addr >= '{first_addr}' and end_ip_addr <= '{last_addr}'"
+
+
+def get_ip6_subnet_start_and_end_hexes_query(cidr: netaddr.IPNetwork) -> str:
+    """return the first and last addresses in a CIDR as a query string
+    for the solidserver api
+
+    Args:
+        cidr (netaddr.IPNetwork): a CIDR
+
+    Returns:
+        str: a query string for all subnets within a CIDR
+    """
+    first_addr = str(hex(cidr.first)).lstrip("0x").rjust(32, "0")
+    last_addr = str(hex(cidr.last)).lstrip("0x").rjust(32, "0")
+    return f"start_ip6_addr >= '{first_addr}' and end_ip6_addr <= '{last_addr}'"
+
+
 def iter_ip6_subnet_values_for_like_clause(cidr: netaddr.IPNetwork) -> list[str]:
     """Iterate through a CIDR, returning a list of where statements to find all
     addresses within a given /112

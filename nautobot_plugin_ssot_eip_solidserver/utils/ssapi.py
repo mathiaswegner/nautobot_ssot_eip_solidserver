@@ -434,14 +434,31 @@ class SolidServerAPI:
         Returns:
             List: a list of prefixes that are subnets of the CIDR
         """
-        filtered_prefixes = []
-        all_prefixes = self.get_all_prefixes()
+        filtered_prefixes, initial_result = [], []
+        params: dict[str, Any] = {"LIMIT": LIMIT}
+        if netaddr.IPNetwork(cidr).version == 4:
+            query = ssutils.get_ip4_subnet_start_and_end_hexes_query(
+                netaddr.IPNetwork(cidr)
+            )
+            params["WHERE"] = query
+            initial_result = self.generic_api_action(
+                api_action="ip_block_subnet_info", params=params
+            )
+        elif netaddr.IPNetwork(cidr).version == 6:
+            query = ssutils.get_ip6_subnet_start_and_end_hexes_query(
+                netaddr.IPNetwork(cidr)
+            )
+            params["WHERE"] = query
+            initial_result = self.generic_api_action(
+                api_action="ip6_block6_subnet6_info", params=params
+            )
         filter_cidr = netaddr.IPNetwork(cidr)
-        for each_prefix in all_prefixes:
+        self.job.log(f"initial result has {len(initial_result)} prefixes")
+        # belt and suspenders
+        for each_prefix in initial_result:
             network = None
             try:
                 network = ssutils.prefix_to_net(each_prefix)
-                print(network)
             except (ValueError, AddrFormatError):
                 name = each_prefix.get("subnet_name", "")
                 if not name:
@@ -450,4 +467,5 @@ class SolidServerAPI:
                 continue
             if network in filter_cidr:
                 filtered_prefixes.append(each_prefix)
+        self.job.log(message=f"filtered result has {len(initial_result)} prefixes")
         return filtered_prefixes

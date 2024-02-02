@@ -280,6 +280,9 @@ class SolidserverAdapter(DiffSync):
         """
         all_prefixes = []
         if address_filter:
+            self.job.log_debug(
+                message=f"About to query for address filter {address_filter}"
+            )
             filter_prefixes = self.conn.get_prefixes_by_network(address_filter)
             if filter_prefixes:
                 all_prefixes.extend(filter_prefixes)
