@@ -1,6 +1,6 @@
 """Job for runnning solidserver to nautobot data sync
 """
-from pprint import pformat
+# from pprint import pformat
 
 import diffsync  # type: ignore  # pylint: disable=unused-import  # noqa: F401
 import netaddr  # type: ignore
@@ -228,16 +228,19 @@ class SolidserverDataSource(DataSource, Job):
 
         self.log_info("Calculating diffs...")
         diff = self.source_adapter.diff_to(self.target_adapter)
-        self.log_info(f"Found {len(diff)} differences")
+        self.log_info(f"Found {len(diff)} differences pre-filtering")
         self.log_info(f"{diff.summary()}")
-        self.log_debug(pformat(diff.dict()))
-        self.log_debug(f"diff is a {type(diff)}")
-        for each in diff.get_children():
-            self.log_debug(f"each_child is a {type(each)}")
-            self.log_debug(f"each_child has action {each.action}")
-            self.log_debug(f"each child diffs {pformat(each.has_diffs())}")
-            self.log_debug(f"each child keys {pformat(each.dict().keys())}")
-        # diff = ssutils.filter_diff_for_status(diff)
+        # self.log_debug(pformat(diff.dict()))
+
+        # filtering the source adapter to get rid of any diffs that are solely
+        # status__name changes, and updating any diffs where status__name
+        # exists in the target_adapter to match the target_adapter
+        self.source_adapter = ssutils.filter_diff_for_status(
+            diff, self.source_adapter, self.target_adapter
+        )
+        diff = self.source_adapter.diff_to(self.target_adapter)
+        self.log_info(f"Found {len(diff)} differences post-filtering")
+        self.log_info(f"{diff.summary()}")
 
         if not self.kwargs.get("dry_run"):
             try:

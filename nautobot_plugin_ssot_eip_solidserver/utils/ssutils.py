@@ -11,7 +11,7 @@ from typing import Any
 
 import netaddr  # type: ignore
 import validators  # type: ignore
-from diffsync import Diff  # , DiffElement
+from diffsync import Diff, DiffSync  # , DiffElement
 from validators import ValidationError
 
 from nautobot_plugin_ssot_eip_solidserver.diffsync.models.base import (
@@ -215,7 +215,9 @@ def is_addr_valid(
     return (addr_is_valid, addr)
 
 
-def filter_diff_for_status(diff: Diff) -> Diff:
+def filter_diff_for_status(
+    diff: Diff, source_adapter: DiffSync, target_adapter: DiffSync
+) -> DiffSync:
     """filter diff for status changes
 
     Args:
@@ -224,22 +226,17 @@ def filter_diff_for_status(diff: Diff) -> Diff:
     Returns:
         dict: a filtered diff
     """
-    return diff
-    # filtered_diff = Diff()
-    # for resource_type in ("ipaddress", "prefix"):
-    #     if resource_type in diff.dict().keys():
-    #         for key, value in diff.dict()[resource_type].items():
-    #             if "status__name" in value["+"].keys():
-    #                 if len(value["+"].keys()) == 1:
-    #                     continue
-    #                 if "status__name" in value["-"].keys():
-    #                     this_diff: DiffElement = DiffElement(
-    #                         obj_type=resource_type,
-    #                         name=key,
-    #                     )
-    #                     del value["+"]["status__name"]
-    #                     del value["-"]["status__name"]
-    #             if not filtered_diff.get(resource_type):
-    #                 filtered_diff[resource_type] = {}
-    #             filtered_diff[resource_type][key] = value
-    # return filtered_diff
+    for resource_type in ("ipaddress", "prefix"):
+        if resource_type in diff.dict().keys():
+            for key, value in diff.dict()[resource_type].items():
+                this_obj = source_adapter.get(obj=resource_type, identifier=key)
+                if "status__name" in value["+"].keys():
+                    if len(value["+"].keys()) == 1:
+                        source_adapter.remove(this_obj)
+                    if "status__name" in value["-"].keys():
+                        matching_obj = target_adapter.get(
+                            obj=resource_type, identifier=key
+                        )
+                        this_obj.status__name = matching_obj.status__name
+                        source_adapter.update(this_obj)
+    return source_adapter
