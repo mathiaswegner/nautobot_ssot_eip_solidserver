@@ -53,7 +53,7 @@ class SolidserverAdapter(DiffSync):
             each_addr (dict): the Solidserver address record
 
         Returns:
-            SolidserverIPAddress: the diffsync model
+            int | None: the subnet_id of the address record
         """
         try:
             cidr_size: int = IPV4_SUBNET_SIZE_MAP.get(
@@ -89,7 +89,7 @@ class SolidserverAdapter(DiffSync):
             else:
                 self.job.log_warning(new_addr_or_err)
         if new_addr and new_addr.prefix_length:
-            return new_addr.prefix_length
+            return int(each_addr.get("subnet_id", 0)) or None
         return None
 
     def _process_ipv6_addr(self, each_addr: dict[str, str]) -> int | None:
@@ -99,7 +99,7 @@ class SolidserverAdapter(DiffSync):
             each_addr (dict): the Solidserver address record
 
         Returns:
-            SolidserverIPAddress: the diffsync model
+            int | None: the subnet_id of the address record
         """
         try:
             cidr_size: int = int(each_addr.get("subnet6_prefix", 128))
@@ -132,7 +132,7 @@ class SolidserverAdapter(DiffSync):
             else:
                 self.job.log_warning(new_addr_or_err)
         if new_addr and new_addr.prefix_length:
-            return new_addr.prefix_length
+            return int(each_addr.get("subnet6_id", 0)) or None
         return None
 
     def _process_ipv4_prefix(self, each_prefix: dict[str, str]) -> None:
@@ -291,7 +291,9 @@ class SolidserverAdapter(DiffSync):
                 )
         if subnet_list:
             self.job.log_debug(message=f"Subnet list has {len(subnet_list)} items")
-            filter_name_prefixes = self.conn.get_prefixes_by_id(subnet_list)
+            filter_name_prefixes = self.conn.get_prefixes_by_id(
+                subnet_list=subnet_list, address_filter=address_filter
+            )
             self.job.log_debug(
                 message=f"Filter name prefixes has {len(filter_name_prefixes)} items"
             )
