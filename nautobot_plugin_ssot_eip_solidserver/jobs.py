@@ -231,6 +231,13 @@ class SolidserverDataSource(DataSource, Job):
         self.log_info(f"Found {len(diff)} differences")
         self.log_info(f"{diff.summary()}")
         self.log_debug(pformat(diff.dict()))
+        self.log_debug(f"diff is a {type(diff)}")
+        for each in diff.get_children():
+            self.log_debug(f"each_child is a {type(each)}")
+            self.log_debug(f"each_child has action {each.action}")
+            self.log_debug(f"each child diffs {pformat(each.has_diffs())}")
+            self.log_debug(f"each child keys {pformat(each.dict().keys())}")
+        # diff = ssutils.filter_diff_for_status(diff)
 
         if not self.kwargs.get("dry_run"):
             self.commit = True

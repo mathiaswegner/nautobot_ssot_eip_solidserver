@@ -11,6 +11,7 @@ from typing import Any
 
 import netaddr  # type: ignore
 import validators  # type: ignore
+from diffsync import Diff  # , DiffElement
 from validators import ValidationError
 
 from nautobot_plugin_ssot_eip_solidserver.diffsync.models.base import (
@@ -212,3 +213,33 @@ def is_addr_valid(
         err = err + f"host {addr.host}"
         return (False, err)
     return (addr_is_valid, addr)
+
+
+def filter_diff_for_status(diff: Diff) -> Diff:
+    """filter diff for status changes
+
+    Args:
+        diff (dict): a diffsync diff
+
+    Returns:
+        dict: a filtered diff
+    """
+    return diff
+    # filtered_diff = Diff()
+    # for resource_type in ("ipaddress", "prefix"):
+    #     if resource_type in diff.dict().keys():
+    #         for key, value in diff.dict()[resource_type].items():
+    #             if "status__name" in value["+"].keys():
+    #                 if len(value["+"].keys()) == 1:
+    #                     continue
+    #                 if "status__name" in value["-"].keys():
+    #                     this_diff: DiffElement = DiffElement(
+    #                         obj_type=resource_type,
+    #                         name=key,
+    #                     )
+    #                     del value["+"]["status__name"]
+    #                     del value["-"]["status__name"]
+    #             if not filtered_diff.get(resource_type):
+    #                 filtered_diff[resource_type] = {}
+    #             filtered_diff[resource_type][key] = value
+    # return filtered_diff
