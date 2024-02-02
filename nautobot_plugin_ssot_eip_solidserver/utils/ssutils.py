@@ -11,7 +11,7 @@ from typing import Any
 
 import netaddr  # type: ignore
 import validators  # type: ignore
-from validators import ValidationFailure
+from validators import ValidationError
 
 from nautobot_plugin_ssot_eip_solidserver.diffsync.models.base import (
     SSoTIPAddress,
@@ -131,7 +131,7 @@ def domain_name_prep(domain_filter: str) -> tuple[list, list]:
         try:
             validators.domain(each_domain)
             domain_list.append(each_domain)
-        except ValidationFailure:
+        except ValidationError:
             errors.append(f"{each_domain} is not a valid domain")
     return domain_list, errors
 
