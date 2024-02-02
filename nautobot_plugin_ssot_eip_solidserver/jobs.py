@@ -2,6 +2,7 @@
 """
 from pprint import pformat
 
+import diffsync  # type: ignore  # pylint: disable=unused-import  # noqa: F401
 import netaddr  # type: ignore
 from diffsync.enum import DiffSyncFlags
 from diffsync.exceptions import ObjectNotCreated
@@ -64,7 +65,6 @@ class SolidserverDataSource(DataSource, Job):
 
     def __init__(self) -> None:
         super().__init__()
-        self.commit: bool = True
         self.domain_filter: list[str] = []
         self.client: SolidServerAPI
         self.sync: Sync
@@ -147,13 +147,13 @@ class SolidserverDataSource(DataSource, Job):
     def sync_data(self) -> None:
         """SSoT plugin required sync_data method
         Loads both adapters, gets data sets from both, runs diff
-        operation and, if commit, sync operation
+        operation and, if not dry run, sync operation
         """
         try:
             self.log_debug(f"version {SSoTEIPSolidServerConfig.version}")
-            self.log_debug(f"commit {self.commit}")
+            self.log_debug(f"commit {self.kwargs.get('dry_run')}")
         except AttributeError:
-            self.log_debug("attr error trying to get self.commit")
+            self.log_debug("attr error trying to get self.kwargs[dry_run]")
         if self.kwargs.get("address_filter_from_ui"):
             try:
                 netaddr.IPNetwork(self.kwargs.get("address_filter_from_ui", ""))
@@ -240,7 +240,6 @@ class SolidserverDataSource(DataSource, Job):
         # diff = ssutils.filter_diff_for_status(diff)
 
         if not self.kwargs.get("dry_run"):
-            self.commit = True
             try:
                 self.source_adapter.sync_to(self.target_adapter)
                 self.log_success(message="Sync succeeded.")
