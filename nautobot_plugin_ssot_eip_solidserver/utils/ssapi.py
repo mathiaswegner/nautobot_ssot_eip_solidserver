@@ -454,7 +454,7 @@ class SolidServerAPI:
             )
             params["WHERE"] = query
             initial_result = self.generic_api_action(
-                api_action="ip_block_subnet_info", params=params
+                api_action="ip_block_subnet_list", params=params
             )
         elif netaddr.IPNetwork(cidr).version == 6:
             query = ssutils.get_ip6_subnet_start_and_end_hexes_query(
@@ -462,7 +462,7 @@ class SolidServerAPI:
             )
             params["WHERE"] = query
             initial_result = self.generic_api_action(
-                api_action="ip6_block6_subnet6_info", params=params
+                api_action="ip6_block6_subnet6_list", params=params
             )
         filter_cidr = netaddr.IPNetwork(cidr)
         self.job.log(f"initial result has {len(initial_result)} prefixes")
