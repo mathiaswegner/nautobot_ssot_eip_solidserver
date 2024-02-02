@@ -233,10 +233,13 @@ def filter_diff_for_status(
                 if "status__name" in value["+"].keys():
                     if len(value["+"].keys()) == 1:
                         source_adapter.remove(this_obj)
-                    if "status__name" in value["-"].keys():
-                        matching_obj = target_adapter.get(
-                            obj=resource_type, identifier=key
-                        )
-                        this_obj.status__name = matching_obj.status__name
-                        source_adapter.update(this_obj)
+                    try:
+                        if "status__name" in value["-"].keys():
+                            matching_obj = target_adapter.get(
+                                obj=resource_type, identifier=key
+                            )
+                            this_obj.status__name = matching_obj.status__name
+                            source_adapter.update(this_obj)
+                    except KeyError:
+                        pass
     return source_adapter
