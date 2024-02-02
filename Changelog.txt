@@ -1,3 +1,13 @@
+### Release 1.1.0
+- Improved performance of SolidSERVER prefix queries by switching list querying approach
+- Improved SolidSERVER adapter logging
+- Updated validators dependency
+- Fixed bug where prefix validity logic was inverted
+- Fixed bug where subnet_id list was incorrectly populated, causing extra prefixes to be included
+- Fixed bug where SolidSERVER adapter used malformed CIDR for comparison
+- Fixed bug where logging statement came before validation of data to be logged caused traceback
+- Fixed bug where switching to nautobot_ssot.contrib resulted in forcing status of updated Nautobot records to "Imported from SolidSERVER", overwriting existing status
+
 ### Release 1.0.0
 
 - Switched to using nautobot_ssot.contrib instead of writing nautobot models
