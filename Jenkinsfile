@@ -51,7 +51,7 @@ pipeline {
                     steps {
                         withCredentials([usernamePassword(credentialsId:'isc-penn-tse-services-deploy-key', passwordVariable: 'GITLAB_KEY', usernameVariable: 'GITLAB_USER')]){
                             sh '''
-                            git pull --tags --ff-only https://${GITLAB_USER}:${GITLAB_KEY}@gitlab.com/isc-penn/tse/services/sourceoftruth/nautobot_ssot_eip_solidserver.git
+                            git fetch --tags https://${GITLAB_USER}:${GITLAB_KEY}@gitlab.com/isc-penn/tse/services/sourceoftruth/nautobot_ssot_eip_solidserver.git
                             '''
                         }
                         sh '''
