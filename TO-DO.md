@@ -4,10 +4,6 @@
 
     - add support for pushing data back to solidserver
 
-## nautobot model
-
-    - override nautobot_ssot.contrib so that status is not addressed by update() methods
-
 ## jobs
 
     - add job for pushing data back to solidserver
