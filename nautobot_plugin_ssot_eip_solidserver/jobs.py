@@ -1,17 +1,14 @@
 """Job for runnning solidserver to nautobot data sync
 """
-from pprint import pformat
+# from pprint import pformat
 
+import diffsync  # type: ignore  # pylint: disable=unused-import  # noqa: F401
 import netaddr  # type: ignore
 from diffsync.enum import DiffSyncFlags
 from diffsync.exceptions import ObjectNotCreated
 from django.conf import settings  # type: ignore
 from django.core.exceptions import ObjectDoesNotExist, ValidationError  # type: ignore
 from django.urls import reverse  # type: ignore
-from nautobot_ssot.jobs.base import DataMapping, DataSource  # type: ignore
-from nautobot_ssot.models import Sync  # type: ignore
-from netaddr import AddrFormatError  # type: ignore
-
 from nautobot.extras.jobs import (  # type: ignore
     BooleanVar,
     IntegerVar,
@@ -20,6 +17,10 @@ from nautobot.extras.jobs import (  # type: ignore
     StringVar,
 )
 from nautobot.ipam.models import IPAddress, Prefix  # type: ignore
+from nautobot_ssot.jobs.base import DataMapping, DataSource  # type: ignore
+from nautobot_ssot.models import Sync  # type: ignore
+from netaddr import AddrFormatError  # type: ignore
+
 from nautobot_plugin_ssot_eip_solidserver import SSoTEIPSolidServerConfig
 from nautobot_plugin_ssot_eip_solidserver.diffsync.adapters import nautobot, solidserver
 from nautobot_plugin_ssot_eip_solidserver.utils import ssutils
@@ -64,7 +65,6 @@ class SolidserverDataSource(DataSource, Job):
 
     def __init__(self) -> None:
         super().__init__()
-        self.commit: bool = True
         self.domain_filter: list[str] = []
         self.client: SolidServerAPI
         self.sync: Sync
@@ -147,16 +147,13 @@ class SolidserverDataSource(DataSource, Job):
     def sync_data(self) -> None:
         """SSoT plugin required sync_data method
         Loads both adapters, gets data sets from both, runs diff
-        operation and, if commit, sync operation
+        operation and, if not dry run, sync operation
         """
         try:
-            self.log_debug(
-                "version"
-                f" {SSoTEIPSolidServerConfig.version} ({SSoTEIPSolidServerConfig.build})"
-            )
-            self.log_debug(f"commit {self.commit}")
+            self.log_debug(f"version {SSoTEIPSolidServerConfig.version}")
+            self.log_debug(f"commit {self.kwargs.get('dry_run')}")
         except AttributeError:
-            self.log_debug("attr error trying to get self.commit")
+            self.log_debug("attr error trying to get self.kwargs[dry_run]")
         if self.kwargs.get("address_filter_from_ui"):
             try:
                 netaddr.IPNetwork(self.kwargs.get("address_filter_from_ui", ""))
@@ -231,12 +228,21 @@ class SolidserverDataSource(DataSource, Job):
 
         self.log_info("Calculating diffs...")
         diff = self.source_adapter.diff_to(self.target_adapter)
-        self.log_info(f"Found {len(diff)} differences")
+        self.log_info(f"Found {len(diff)} differences pre-filtering")
         self.log_info(f"{diff.summary()}")
-        self.log_debug(pformat(diff.dict()))
+        # self.log_debug(pformat(diff.dict()))
+
+        # filtering the source adapter to get rid of any diffs that are solely
+        # status__name changes, and updating any diffs where status__name
+        # exists in the target_adapter to match the target_adapter
+        self.source_adapter = ssutils.filter_diff_for_status(
+            diff, self.source_adapter, self.target_adapter
+        )
+        diff = self.source_adapter.diff_to(self.target_adapter)
+        self.log_info(f"Found {len(diff)} differences post-filtering")
+        self.log_info(f"{diff.summary()}")
 
         if not self.kwargs.get("dry_run"):
-            self.commit = True
             try:
                 self.source_adapter.sync_to(self.target_adapter)
                 self.log_success(message="Sync succeeded.")

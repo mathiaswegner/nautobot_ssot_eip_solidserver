@@ -11,6 +11,8 @@ from typing import Any
 
 import netaddr  # type: ignore
 import validators  # type: ignore
+from diffsync import Diff, DiffSync  # , DiffElement
+from validators import ValidationError
 
 from nautobot_plugin_ssot_eip_solidserver.diffsync.models.base import (
     SSoTIPAddress,
@@ -58,6 +60,36 @@ def iter_ip4_subnet_values_for_like_clause(cidr: netaddr.IPNetwork) -> list[str]
     return search_list
 
 
+def get_ip4_subnet_start_and_end_hexes_query(cidr: netaddr.IPNetwork) -> str:
+    """return the first and last addresses in a CIDR as a query string
+    for the solidserver api
+
+    Args:
+        cidr (netaddr.IPNetwork): a CIDR
+
+    Returns:
+        str: a query string for all subnets within a CIDR
+    """
+    first_addr = str(hex(cidr.first)).lstrip("0x").rjust(8, "0")
+    last_addr = str(hex(cidr.last)).lstrip("0x").rjust(8, "0")
+    return f"start_ip_addr >= '{first_addr}' and end_ip_addr <= '{last_addr}'"
+
+
+def get_ip6_subnet_start_and_end_hexes_query(cidr: netaddr.IPNetwork) -> str:
+    """return the first and last addresses in a CIDR as a query string
+    for the solidserver api
+
+    Args:
+        cidr (netaddr.IPNetwork): a CIDR
+
+    Returns:
+        str: a query string for all subnets within a CIDR
+    """
+    first_addr = str(hex(cidr.first)).lstrip("0x").rjust(32, "0")
+    last_addr = str(hex(cidr.last)).lstrip("0x").rjust(32, "0")
+    return f"start_ip6_addr >= '{first_addr}' and end_ip6_addr <= '{last_addr}'"
+
+
 def iter_ip6_subnet_values_for_like_clause(cidr: netaddr.IPNetwork) -> list[str]:
     """Iterate through a CIDR, returning a list of where statements to find all
     addresses within a given /112
@@ -100,7 +132,7 @@ def domain_name_prep(domain_filter: str) -> tuple[list, list]:
         try:
             validators.domain(each_domain)
             domain_list.append(each_domain)
-        except validators.utils.ValidationError:
+        except ValidationError:
             errors.append(f"{each_domain} is not a valid domain")
     return domain_list, errors
 
@@ -181,3 +213,33 @@ def is_addr_valid(
         err = err + f"host {addr.host}"
         return (False, err)
     return (addr_is_valid, addr)
+
+
+def filter_diff_for_status(
+    diff: Diff, source_adapter: DiffSync, target_adapter: DiffSync
+) -> DiffSync:
+    """filter diff for status changes
+
+    Args:
+        diff (dict): a diffsync diff
+
+    Returns:
+        dict: a filtered diff
+    """
+    for resource_type in ("ipaddress", "prefix"):
+        if resource_type in diff.dict().keys():
+            for key, value in diff.dict()[resource_type].items():
+                this_obj = source_adapter.get(obj=resource_type, identifier=key)
+                if "status__name" in value["+"].keys():
+                    if len(value["+"].keys()) == 1:
+                        source_adapter.remove(this_obj)
+                    try:
+                        if "status__name" in value["-"].keys():
+                            matching_obj = target_adapter.get(
+                                obj=resource_type, identifier=key
+                            )
+                            this_obj.status__name = matching_obj.status__name
+                            source_adapter.update(this_obj)
+                    except KeyError:
+                        pass
+    return source_adapter
