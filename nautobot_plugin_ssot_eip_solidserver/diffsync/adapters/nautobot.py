@@ -81,6 +81,9 @@ class SSoTNautobotAdapter(NautobotAdapter):
             solidserver_addr_id=addr_id,
             status__name=prefix.status.name,
         )
+        self.job.log_debug(
+            f"new prefix {new_prefix.network} {new_prefix.prefix_length}"
+        )
         try:
             self.add(new_prefix)
         except ObjectAlreadyExists as err:
