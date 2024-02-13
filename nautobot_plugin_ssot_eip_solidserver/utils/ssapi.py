@@ -415,10 +415,10 @@ class SolidServerAPI:
         action = "unset"
         if cidr.version == 4:
             action = "ip_address_list"
-            query_str = ssutils.get_ip4_subnet_start_and_end_hexes_query(cidr)
+            query_str = ssutils.generate_ip4_where_clause(cidr)
         elif cidr.version == 6:
             action = "ip6_address6_list"
-            query_str = ssutils.get_ip6_subnet_start_and_end_hexes_query(cidr)
+            query_str = ssutils.generate_ip6_where_clause(cidr)
         params: dict[str, str | int] = {"LIMIT": LIMIT}
         self.job.log_debug(f"fetching Solidserver address for {query_str}")
         params["WHERE"] = query_str
