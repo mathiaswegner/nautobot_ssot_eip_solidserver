@@ -227,12 +227,15 @@ class SolidServerAPI:
         return r_text
 
     def get_prefixes_by_id(
-        self, subnet_list: list[str], address_filter: str | list[str] | None = None
+        self,
+        subnet_list: list[str],
+        address_filter: str | netaddr.IPNetwork,
     ) -> list[Any]:
         """take a list of unique ids, fetch them from solidserver
 
         Args:
             subnet_list (list): a list of subnet IDs
+            address_filter (str, netaddr.IPNetwork): a CIDR (or string representation of a CIDR)
 
         Returns:
             list: a list of prefix resources
@@ -241,17 +244,19 @@ class SolidServerAPI:
         parent = netaddr.IPNetwork("0.0.0.0/0")
         subnet_name = "subnet_id"
         api_action = "ip_block_subnet_info"
-        if address_filter and isinstance(address_filter, str):
+        if isinstance(address_filter, str):
             parent = netaddr.IPNetwork(address_filter)
-            if parent.version == 6:
-                parent = netaddr.IPNetwork("::/0")
-                subnet_name = "subnet6_id"
-                api_action = "ip6_block6_subnet6_info"
-            self.job.log_debug(f"parent is {parent} (ipv{parent.version})")
+        elif isinstance(address_filter, netaddr.IPNetwork):
+            parent = address_filter
         else:
-            self.job.log_debug(
-                f"address filter is not a string, value {address_filter}"
+            self.job.log_warning(
+                f"address filter {address_filter} is not a string or netaddr object"
             )
+            return prefixes
+        if parent.version == 6:
+            subnet_name = "subnet6_id"
+            api_action = "ip6_block6_subnet6_info"
+        self.job.log_debug(f"parent is {parent} (ipv{parent.version})")
         params: dict[str, int | str] = {"LIMIT": LIMIT}
         for each_id in subnet_list:
             self.job.log_debug(f"fetching Solidserver prefix id {each_id}")
