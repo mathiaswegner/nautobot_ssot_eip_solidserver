@@ -4,6 +4,7 @@
 
 import diffsync  # type: ignore  # pylint: disable=unused-import  # noqa: F401
 import netaddr  # type: ignore
+from billiard.exceptions import SoftTimeLimitExceeded
 from diffsync.enum import DiffSyncFlags
 from diffsync.exceptions import ObjectNotCreated
 from django.conf import settings  # type: ignore
@@ -255,6 +256,12 @@ class SolidserverDataSource(DataSource, Job):
                 )
             except ObjectNotCreated as create_err:
                 self.log_failure(f"Unable to create object {create_err}")
+            except SoftTimeLimitExceeded as timeout_err:
+                self.log_failure(
+                    f"Query exceeded timeout! {timeout_err}"
+                    " Consider re-running the job with a larger timeout"
+                    " or a smaller address filter."
+                )
 
 
 jobs = [SolidserverDataSource]
