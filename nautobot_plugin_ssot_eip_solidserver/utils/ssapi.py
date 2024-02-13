@@ -410,31 +410,29 @@ class SolidServerAPI:
             list: a list of address models
         """
         ss_addrs: list[Any] = []
-        sub_cidrs: list[str] = []
+        query_str = ""
         self.job.log_debug("Starting get addresses by network")
         action = "unset"
         if cidr.version == 4:
             action = "ip_address_list"
-            sub_cidrs = ssutils.iter_ip4_subnet_values_for_like_clause(cidr)
+            query_str = ssutils.get_ip4_subnet_start_and_end_hexes_query(cidr)
         elif cidr.version == 6:
             action = "ip6_address6_list"
-            sub_cidrs = ssutils.iter_ip6_subnet_values_for_like_clause(cidr)
+            query_str = ssutils.get_ip6_subnet_start_and_end_hexes_query(cidr)
         params: dict[str, str | int] = {"LIMIT": LIMIT}
-        self.job.log_debug(f"sub_cidrs is {sub_cidrs}")
-        for each_cidr in sub_cidrs:
-            self.job.log_debug(f"fetching Solidserver address for {each_cidr}")
-            params["WHERE"] = each_cidr
-            this_address = self.generic_api_action(
-                api_action=action, http_action="get", params=params
-            )
-            if this_address:
-                if isinstance(this_address, list):
-                    for each_addr in this_address:
-                        if each_addr.get("hostaddr") in cidr:
-                            ss_addrs.append(each_addr)
-                else:
-                    if this_address.get("hostaddr") in cidr:
-                        ss_addrs.append(this_address)
+        self.job.log_debug(f"fetching Solidserver address for {query_str}")
+        params["WHERE"] = query_str
+        addresses = self.generic_api_action(
+            api_action=action, http_action="get", params=params
+        )
+        if addresses:
+            if isinstance(addresses, list):
+                for each_addr in addresses:
+                    if each_addr.get("hostaddr") in cidr:
+                        ss_addrs.append(each_addr)
+            else:
+                if addresses.get("hostaddr") in cidr:
+                    ss_addrs.append(addresses)
         return ss_addrs
 
     def get_prefixes_by_network(self, cidr: str) -> list[Any]:
