@@ -12,6 +12,7 @@ from typing import Any
 import netaddr  # type: ignore
 import validators  # type: ignore
 from diffsync import Diff, DiffSync  # , DiffElement
+from diffsync.exceptions import ObjectNotFound
 from validators import ValidationError
 
 from nautobot_plugin_ssot_eip_solidserver.diffsync.models.base import (
@@ -229,7 +230,10 @@ def filter_diff_for_status(
     for resource_type in ("ipaddress", "prefix"):
         if resource_type in diff.dict().keys():
             for key, value in diff.dict()[resource_type].items():
-                this_obj = source_adapter.get(obj=resource_type, identifier=key)
+                try:
+                    this_obj = source_adapter.get(obj=resource_type, identifier=key)
+                except ObjectNotFound:
+                    continue
                 if "status__name" in value["+"].keys():
                     if len(value["+"].keys()) == 1:
                         source_adapter.remove(this_obj)

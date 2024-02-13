@@ -238,32 +238,29 @@ class SolidServerAPI:
             list: a list of prefix resources
         """
         prefixes = []
-        parent4 = netaddr.IPNetwork("0.0.0.0/0")
-        parent6 = netaddr.IPNetwork("::/0")
+        parent = netaddr.IPNetwork("0.0.0.0/0")
+        subnet_name = "subnet_id"
+        api_action = "ip_block_subnet_info"
         if address_filter and isinstance(address_filter, str):
             parent = netaddr.IPNetwork(address_filter)
-            if parent.version == 4:
-                parent4 = parent
-            elif parent.version == 6:
-                parent6 = parent
+            if parent.version == 6:
+                parent = netaddr.IPNetwork("::/0")
+                subnet_name = "subnet6_id"
+                api_action = "ip6_block6_subnet6_info"
+            self.job.log_debug(f"parent is {parent} (ipv{parent.version})")
+        else:
+            self.job.log_debug(
+                f"address filter is not a string, value {address_filter}"
+            )
         params: dict[str, int | str] = {"LIMIT": LIMIT}
         for each_id in subnet_list:
             self.job.log_debug(f"fetching Solidserver prefix id {each_id}")
-            params["subnet_id"] = each_id
+            params[subnet_name] = each_id
             this_prefix = self.generic_api_action(
-                api_action="ip_block_subnet_info", http_action="get", params=params
+                api_action=api_action, http_action="get", params=params
             )
             if this_prefix:
-                if ssutils.prefix_to_net(this_prefix[0]) in parent4:
-                    prefixes.append(this_prefix)
-            else:
-                params["subnet6_id"] = each_id
-                this_prefix = self.generic_api_action(
-                    api_action="ip6_block6_subnet6_info",
-                    http_action="get",
-                    params=params,
-                )
-                if ssutils.prefix_to_net(this_prefix[0]) in parent6:
+                if ssutils.prefix_to_net(this_prefix[0]) in parent:
                     prefixes.append(this_prefix)
         return prefixes
 
