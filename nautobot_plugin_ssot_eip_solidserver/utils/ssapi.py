@@ -227,43 +227,45 @@ class SolidServerAPI:
         return r_text
 
     def get_prefixes_by_id(
-        self, subnet_list: list[str], address_filter: str | list[str] | None = None
+        self,
+        subnet_list: list[str],
+        address_filter: str | netaddr.IPNetwork,
     ) -> list[Any]:
         """take a list of unique ids, fetch them from solidserver
 
         Args:
             subnet_list (list): a list of subnet IDs
+            address_filter (str, netaddr.IPNetwork): a CIDR (or string representation of a CIDR)
 
         Returns:
             list: a list of prefix resources
         """
         prefixes = []
-        parent4 = netaddr.IPNetwork("0.0.0.0/0")
-        parent6 = netaddr.IPNetwork("::/0")
-        if address_filter and isinstance(address_filter, str):
+        parent = netaddr.IPNetwork("0.0.0.0/0")
+        subnet_name = "subnet_id"
+        api_action = "ip_block_subnet_info"
+        if isinstance(address_filter, str):
             parent = netaddr.IPNetwork(address_filter)
-            if parent.version == 4:
-                parent4 = parent
-            elif parent.version == 6:
-                parent6 = parent
+        elif isinstance(address_filter, netaddr.IPNetwork):
+            parent = address_filter
+        else:
+            self.job.log_warning(
+                f"address filter {address_filter} is not a string or netaddr object"
+            )
+            return prefixes
+        if parent.version == 6:
+            subnet_name = "subnet6_id"
+            api_action = "ip6_block6_subnet6_info"
+        self.job.log_debug(f"parent is {parent} (ipv{parent.version})")
         params: dict[str, int | str] = {"LIMIT": LIMIT}
         for each_id in subnet_list:
             self.job.log_debug(f"fetching Solidserver prefix id {each_id}")
-            params["subnet_id"] = each_id
+            params[subnet_name] = each_id
             this_prefix = self.generic_api_action(
-                api_action="ip_block_subnet_info", http_action="get", params=params
+                api_action=api_action, http_action="get", params=params
             )
             if this_prefix:
-                if ssutils.prefix_to_net(this_prefix[0]) in parent4:
-                    prefixes.append(this_prefix)
-            else:
-                params["subnet6_id"] = each_id
-                this_prefix = self.generic_api_action(
-                    api_action="ip6_block6_subnet6_info",
-                    http_action="get",
-                    params=params,
-                )
-                if ssutils.prefix_to_net(this_prefix[0]) in parent6:
+                if ssutils.prefix_to_net(this_prefix[0]) in parent:
                     prefixes.append(this_prefix)
         return prefixes
 
@@ -408,31 +410,29 @@ class SolidServerAPI:
             list: a list of address models
         """
         ss_addrs: list[Any] = []
-        sub_cidrs: list[str] = []
+        query_str = ""
         self.job.log_debug("Starting get addresses by network")
         action = "unset"
         if cidr.version == 4:
             action = "ip_address_list"
-            sub_cidrs = ssutils.iter_ip4_subnet_values_for_like_clause(cidr)
+            query_str = ssutils.generate_ip4_where_clause(cidr)
         elif cidr.version == 6:
             action = "ip6_address6_list"
-            sub_cidrs = ssutils.iter_ip6_subnet_values_for_like_clause(cidr)
+            query_str = ssutils.generate_ip6_where_clause(cidr)
         params: dict[str, str | int] = {"LIMIT": LIMIT}
-        self.job.log_debug(f"sub_cidrs is {sub_cidrs}")
-        for each_cidr in sub_cidrs:
-            self.job.log_debug(f"fetching Solidserver address for {each_cidr}")
-            params["WHERE"] = each_cidr
-            this_address = self.generic_api_action(
-                api_action=action, http_action="get", params=params
-            )
-            if this_address:
-                if isinstance(this_address, list):
-                    for each_addr in this_address:
-                        if each_addr.get("hostaddr") in cidr:
-                            ss_addrs.append(each_addr)
-                else:
-                    if this_address.get("hostaddr") in cidr:
-                        ss_addrs.append(this_address)
+        self.job.log_debug(f"fetching Solidserver address for {query_str}")
+        params["WHERE"] = query_str
+        addresses = self.generic_api_action(
+            api_action=action, http_action="get", params=params
+        )
+        if addresses:
+            if isinstance(addresses, list):
+                for each_addr in addresses:
+                    if each_addr.get("hostaddr") in cidr:
+                        ss_addrs.append(each_addr)
+            else:
+                if addresses.get("hostaddr") in cidr:
+                    ss_addrs.append(addresses)
         return ss_addrs
 
     def get_prefixes_by_network(self, cidr: str) -> list[Any]:

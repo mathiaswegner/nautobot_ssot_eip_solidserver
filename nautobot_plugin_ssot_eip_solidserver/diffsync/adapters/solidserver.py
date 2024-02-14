@@ -295,7 +295,10 @@ class SolidserverAdapter(DiffSync):
                 subnet_list=subnet_list, address_filter=address_filter
             )
             self.job.log_debug(
-                message=f"Filter name prefixes has {len(filter_name_prefixes)} items"
+                message=(
+                    f"Filter name prefixes has {len(filter_name_prefixes)} items with"
+                )
+                + f" filters {address_filter} and subnet_list {subnet_list}"
             )
             self.job.log_debug(message=f"Subnet list has {len(subnet_list)} items")
             if filter_name_prefixes:

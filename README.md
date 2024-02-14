@@ -44,7 +44,7 @@ The following should be added to your nautobot_config.py and updated for your en
 
 ## Notes/tips on usage
 
-The default timeout of 120 seconds is enough for many queries, but larger queries will take more time.  An IPv4 /18 network containing ~1700 records takes approximately 90 seconds.  An IPv4 /18 network containing ~4500 records takes approximately 270 seconds.  An IPv4 /19 network containing ~5200 records takes approxmately 300 seconds.  Exactly when to increase the timeout depends on how broad the query is and how many records are in the query results.
+The default timeout of 120 seconds is enough for most queries, but larger queries may exceed the timeout.  Jobs that exceed the default timeout will be killed by Nautobot and show up as failed with a "Query exceeded timeout!" error in the job log.  Re-running the job with a narrower filter or a larger timeout should help, but be aware that exceeding the hard timeout limit from the nautobot_config will cause the job to fail no matter what.
 
 ### BIG CAVEAT ABOUT THE NAME FILTER!
 
