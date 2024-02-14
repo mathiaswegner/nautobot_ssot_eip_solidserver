@@ -1,3 +1,14 @@
+### Release 1.1.2
+- Continued revision of prefix queries to use fewer larger queries
+- Improved handling of soft timeout errors
+- Fixed bug where getting prefixes by ID could get the wrong IP version prefix
+- Fixed bug where objects only in Nautobot could cause traceback during diff
+- Fixed issue where getting prefixes by ID could fail if filter was already
+converted to a netaddr rather than being a string
+
+### Release 1.1.1
+- Minor Jenkinsfile tweak
+
 ### Release 1.1.0
 - Improved performance of SolidSERVER prefix queries by switching list querying approach
 - Improved SolidSERVER adapter logging
